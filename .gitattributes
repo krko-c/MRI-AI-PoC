@@ -1,0 +1,11 @@
+# Default text handling for future files
+* text=auto
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+
+# Preserve the initial protected baseline documents byte-for-byte
+01_canonical/MRI_AI_POC_CANONICAL_PROMPT_PACK_v20260818.md -text -eol
+06_project_docs/MRI_AI_POC_MASTER_PLAN_v20260818.md -text -eol
+06_project_docs/MRI_AI_POC_DEVELOPMENT_ROADMAP_v20260818.md -text -eol
+
