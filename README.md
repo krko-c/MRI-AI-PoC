@@ -6,27 +6,43 @@ MRI 리포트의 주요 이슈를 구조화하고, 국내 자산운용사 관점
 
 문서 우선순위는 다음과 같다.
 
-1. Current Canonical Prompt Pack
-2. Master Plan
-3. Regression Log
-4. IT Logical Specification
-5. Archive
-6. Conversation History
+1. Accepted Architecture Decisions
+   - 전체 Architecture, Component 순서 및 역할 변경의 최우선 기준
+2. Latest Master Plan / Development Roadmap
+   - 현재 개발방향과 개발순서의 기준
+3. Current Canonical Prompt Pack
+   - 현재 Prompt baseline
+   - 단, Accepted ADR에 의해 `ARCHITECTURE REVISION PENDING`으로 지정된 Component에서는 기존 Architecture/호출순서를 우선하지 않음
+4. Regression Log
+5. IT Logical Specification
+6. Archive
+7. Conversation History
 
-Canonical 파일이 실제 기준본이며 대화 기록은 기준본을 대체하지 않는다.
+Canonical Prompt Pack `v20260818`은 보존된 Prompt baseline이다.
+
+ADR-001의 영향을 받는 04~08 Component의 Architecture, 역할 및 호출순서에 대해서는 Accepted ADR과 Latest Master Plan이 Canonical Pack의 기존 Architecture보다 우선한다.
+
+대화 기록은 기준 문서를 대체하지 않는다.
 
 ## Current Status
 
 - Current Canonical Pack: `v20260818`
-- Current development stage: Policy / Legal Retrieval Planner `v1.2` Final Candidate
-- Next development: `08_ZEROIN_RETRIEVAL_CANDIDATE_FINDER_v1.0`
-- External Evidence Extractor `v1.0`: Draft, do not use yet
+- Canonical Prompt Pack `v20260818`: retained as stored baseline
+- Latest Master Plan: `MRI_AI_POC_MASTER_PLAN_v20260818_r2.md`
+- Latest Development Roadmap: `MRI_AI_POC_DEVELOPMENT_ROADMAP_v20260818_r2.md`
+- ADR-001: `ACCEPTED`
+- Architecture: Hypothesis-Driven External Research
+- Next development: Business Opportunity Hypothesis Agent
+- External Evidence components 04~07: `ARCHITECTURE REVISION PENDING`
+- ZeroIn 08: developed/regression-tested logic exists, but its role is being repositioned primarily to `OPPORTUNITY_VALIDATION`
 - AIR Runtime: Unvalidated / Deferred
 - Generalization verified: No
 
 ## Architecture
 
-Market / Opportunity Lane과 Company State Lane은 독립적으로 진행하며, Business Opportunity와 Integrated Current State는 Gap Analysis에서 처음 결합한다.
+ADR-001에 따라 External Research는 Issue-first broad research가 아니라 Hypothesis-driven targeted research로 수행한다. Screening 후 Company-blind Business Opportunity Hypothesis와 Evidence Question을 먼저 생성하고, 필요한 Source만 호출하여 Opportunity를 검증한다.
+
+Company State와 Business Opportunity는 Gap Analysis 전까지 분리하며, Business Opportunity와 Integrated Current State는 Gap Analysis에서 처음 결합한다. MRI Issue 자체가 펀드·상품시장과 직접 대응되는 경우에만 Issue-level direct market evidence retrieval을 선택적으로 허용한다.
 
 ## Directory Guide
 
@@ -59,4 +75,3 @@ Market / Opportunity Lane과 Company State Lane은 독립적으로 진행하며,
 - 작업 시작 전 `pull`, 작업 종료 전 변경 검토 후 `commit` 및 `push`한다.
 - PC와 노트북은 각각 독립적인 clone을 사용한다.
 - 회사 내부 PDF, MRI 원문, API key, `.env`, 자격증명 및 Runtime 결과물은 커밋하지 않는다.
-

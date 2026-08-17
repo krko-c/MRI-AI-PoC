@@ -75,3 +75,68 @@
 - Synthetic Holdout은 Controlled Holdout이며 Genuine Generalization Test로 간주하지 않는다.
 - 최종 Generalization Test는 개발에 사용하지 않은 새로운 MRI로 수행한다.
 
+## 08 ZeroIn Retrieval / Candidate Finder
+
+### Data Design Confirmed
+
+- representative class name available
+- family setup amount available
+- family NAV available
+- family setup / NAV change available for 1M / 3M / 6M / YTD
+- master funds will be excluded upstream
+- ETF has no class duplication issue
+
+### ZR-01
+
+Result:
+PASS WITH MINOR CALIBRATION
+
+Issue:
+Unsupported issue-specific geography introduced once.
+
+Action:
+MRI ISSUE FIDELITY rule added.
+
+### ZR-02
+
+Result:
+FAIL
+
+Issue:
+Demographic MRI issue was transformed into inferred needs and products: retirement income / income / TDF / dividend.
+
+Impact:
+Confirmed relevant market was over-expanded.
+
+Action:
+ISSUE CONCEPT BOUNDARY added.
+
+### ZR-03
+
+Result:
+PASS WITH MINOR EXECUTION WARNING
+
+Core relevance:
+PASS
+
+Confirmed aggregation:
+PASS
+
+Issue:
+MMF was generated as a BROAD concept despite the existing concept-boundary rule.
+
+Impact:
+No confirmed-market contamination. MMF remained POSSIBLY_RELEVANT.
+
+Action:
+Do not add an MMF-specific Prompt patch. Use structured concept provenance / validation gate in future revision.
+
+### Architecture Finding
+
+Regression demonstrated that ZeroIn has limited value as a mandatory Issue-level retrieval source.
+
+Primary role changed to:
+
+OPPORTUNITY_VALIDATION market evidence retrieval.
+
+This finding led to ADR-001: Hypothesis-Driven External Research Architecture.

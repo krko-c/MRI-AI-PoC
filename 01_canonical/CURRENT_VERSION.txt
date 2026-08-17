@@ -4,13 +4,20 @@ v20260818
 FILE:
 MRI_AI_POC_CANONICAL_PROMPT_PACK_v20260818.md
 
-CURRENT DEVELOPMENT STAGE:
-Policy / Legal Retrieval Planner v1.2 Final Candidate
+ARCHITECTURE STATUS:
+ADR-001 ACCEPTED — Hypothesis-Driven External Research
+
+EXTERNAL EVIDENCE LAYER:
+ARCHITECTURE REVISION PENDING
 
 NEXT DEVELOPMENT:
-ZeroIn Retrieval / Candidate Finder v1.0
+Business Opportunity Hypothesis Agent
+
+IMPORTANT:
+Current Canonical Prompt Pack remains the stored baseline.
+External Evidence components 04~07 and ZeroIn component 08
+require role/order revision before AIR implementation under ADR-001.
 
 DO NOT USE AS CANONICAL:
 AIR screening v0.1.5 CLEAN
 AIR screening v0.1.6 TOOL
-
