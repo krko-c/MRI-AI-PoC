@@ -27,19 +27,24 @@ ADR-001의 영향을 받는 04~08 Component의 Architecture, 역할 및 호출�
 ## Current Status
 
 - Current Canonical Pack: `v20260818`
-- Canonical Prompt Pack `v20260818`: retained as stored baseline; newer AIR candidate rules are pending runtime validation
-- Latest Master Plan: `MRI_AI_POC_MASTER_PLAN_v20260818_r4.md`
-- Latest Development Roadmap: `MRI_AI_POC_DEVELOPMENT_ROADMAP_v20260818_r4.md`
-- Current Development Checkpoint: `MRI_AI_POC_DEVELOPMENT_CHECKPOINT_20260818.md`
-- ADR-001: `ACCEPTED`
-- Architecture: Hypothesis-Driven External Research
-- Front Logical Contract: `r4 defined`
+- Canonical Prompt Pack `v20260818`: retained as stored baseline; newer candidate rules are pending runtime / regression validation
+- Master Plan: `06_project_docs/MRI_AI_POC_MASTER_PLAN.md`
+- Development Roadmap: `06_project_docs/MRI_AI_POC_DEVELOPMENT_ROADMAP.md`
+- Development Checkpoint: `06_project_docs/MRI_AI_POC_DEVELOPMENT_CHECKPOINT.md`
+- ADR Index: `06_project_docs/adr/README.md`
+- ADR-001: `ACCEPTED` — Hypothesis-Driven External Research
+- ADR-002: `ACCEPTED` — Department Review as a parallel internal evidence lane
+- ADR-003: `ACCEPTED` — Parallel Research Lanes and Implementation Neutrality
+- Current development mode: `THIN END-TO-END FIRST`
+- Next test: `H02 one-issue Thin E2E`
+- Front Pipeline: `SUBSTANTIALLY DEVELOPED`
 - AIR v4 Supervisor orchestration: `GENERATED / RUNTIME TEST PENDING`
-- Next logical development: Business Opportunity Hypothesis
-- External Evidence components 04~07: `ARCHITECTURE REVISION PENDING`
-- ZeroIn 08: developed/regression-tested logic exists, but its role is being repositioned primarily to `OPPORTUNITY_VALIDATION`
-- IT feasibility check: `READY TO START IN PARALLEL`
-- AIR Runtime: core compatibility gates passed in current environment; front-pipeline orchestration still in progress
+- BO Production Prompt: `NOT FROZEN — pending Thin E2E`
+- Market / Competitor Intelligence: `EXPLICIT LANE / CONTRACT PENDING`
+- Company State Research: `EXPLICIT LANE / CONTRACT PENDING`
+- Shared Research / Router: `DESIGN STARTED`
+- Physical Agent count: `NOT FIXED`
+- Final target: `COMPLETE MRI RESPONSE DRAFT FOR HUMAN REVIEW`
 - Generalization verified: No
 
 ## Architecture
@@ -52,10 +57,13 @@ Company State와 Business Opportunity는 Gap Analysis 전까지 분리하며, Bu
 
 - `01_canonical/`: 현재 Canonical Prompt Pack과 버전 포인터
 - `02_archive/`: 과거 Prompt 및 개발 이력. 실행 기준으로 사용하지 않음
-- `03_regression/`: Regression Log와 테스트 케이스
+- `03_regression/`: Regression Log, Regression Storage Policy, 테스트 계획 및 케이스
 - `04_it_spec/`: Logical Requirement 및 IT Feasibility Mapping
+- `04_regression/`: 일자별 Regression Update 기록
 - `05_runtime/`: AIR Mapping 등 Runtime 구현 자료. 생성 결과물은 Git에서 제외
-- `06_project_docs/`: Master Plan, Development Roadmap, Architecture Decisions
+- `06_project_docs/`: Live Master Plan, Live Development Roadmap, Live Checkpoint
+- `06_project_docs/adr/`: Accepted Architecture Decision 색인 및 개별 ADR
+- `06_project_docs/contracts/`: Final MRI Response Schema 등 산출물 계약
 
 ## Canonical and Archive Rules
 
