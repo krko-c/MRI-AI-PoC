@@ -1,0 +1,249 @@
+{
+  "ID": "226dc5ee-c9f0-4f57-aa7d-bf5f1def97cb",
+  "Name": "MRI_01_02_03_v4_SUPERVISOR_ORCHESTRATED",
+  "Desc": "Supervisor-managed star topology matching AIR sample multi-agent pattern",
+  "ModelType": "OCST",
+  "MapValue": {
+    "FunctionMaps": [
+      {
+        "PK_ID": "2a15becb-179a-484b-91dd-fcc00778b7ae",
+        "COL_NAME": "Supervisor",
+        "COL_DESC": "Sequential MRI 01→02→03 orchestrator",
+        "COL_X": 220,
+        "COL_Y": 100,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "SUPERVISOR",
+        "prompt": "[SYSTEM - MRI 01→02→03 SUPERVISOR / V4 SUPERVISOR-ORCHESTRATED]\n\n당신은 전체 파이프라인을 순차 실행하는 유일한 오케스트레이터입니다.\n전문 Agent들이 전체 사용자 요청을 대신 수행하게 두지 말고, 각 Agent에 자기 Stage만 명시적으로 위임하십시오.\n\n## 반드시 순차 실행\nSTEP 1. 01_mri_issue_extraction_agent 호출\n- 호출 지시: \"Stage 01만 수행하세요. 아래 Payload를 입력으로 사용하고 sections.issue_extraction만 채워 전체 Payload를 반환하세요.\"\n- 응답 수신 후 `metadata.current_agent == \"01_mri_issue_extraction_agent\"` 및 `sections.issue_extraction != null` 확인\n- 01 응답 JSON 전체를 내부에 그대로 보존\n\nSTEP 2. 02_source_fidelity_validator 호출\n- 01이 반환한 JSON 전체를 입력 Payload로 전달\n- 호출 지시: \"Stage 02만 수행하세요. sections.issue_extraction은 수정하지 말고 sections.fidelity_validation만 채워 전체 Payload를 반환하세요.\"\n- 응답 수신 후 `metadata.current_agent == \"02_source_fidelity_validator\"` 및 `sections.fidelity_validation != null` 확인\n- 02 응답 JSON 전체를 내부에 그대로 보존\n\nSTEP 3. 03_mri_screening_agent 호출\n- 02가 반환한 JSON 전체를 입력 Payload로 전달\n- 호출 지시: \"Stage 03만 수행하세요. 기존 두 섹션을 수정하지 말고 sections.screening_result만 채워 전체 Payload를 반환하세요.\"\n- 응답 수신 후 `metadata.current_agent == \"03_mri_screening_agent\"` 및 `sections.screening_result != null` 확인\n\nSTEP 4. 종료\n- 03의 최종 누적 Payload를 Final Responder에 그대로 전달\n- BO Hypothesis, 외부검색, ZeroIn, 회사 Product RAG, 전략 생성은 절대 실행하지 않음\n\n## 매우 중요한 제어 규칙\n- 전문 Agent의 응답 중 자기 Stage 이후 섹션까지 임의 작성되어 있으면 해당 Stage를 success로 승인하지 마십시오.\n- 01 완료 시 fidelity_validation과 screening_result는 반드시 null이어야 합니다.\n- 02 완료 시 screening_result는 반드시 null이어야 합니다.\n- Agent가 전체 사용자 요청을 스스로 끝내려고 하면 그 응답을 채택하지 말고 \"자기 Stage만 수행\"하라고 1회 재요청하십시오.\n- 전문 Agent의 자연어 요약을 최종 사용자 응답으로 채택하지 마십시오.\n- 각 Agent 응답 JSON은 가공·축약하지 말고 다음 Agent에 그대로 전달하십시오.\n\n## 초기 Payload\n{\n  \"metadata\": {\n    \"workflow_name\": \"MRI_AI_POC_01_02_03\",\n    \"current_agent\": \"Supervisor\",\n    \"status\": \"running\",\n    \"analysis_as_of_date\": null,\n    \"version\": \"v4_supervisor_orchestrated\"\n  },\n  \"source\": {\n    \"source_type\": \"CURRENT_MRI_KB\",\n    \"kb_index_name\": \"kb-6b0fd700\",\n    \"document_name\": null,\n    \"page_provenance_available\": false\n  },\n  \"sections\": {\n    \"issue_extraction\": null,\n    \"fidelity_validation\": null,\n    \"screening_result\": null\n  },\n  \"errors\": []\n}\n",
+        "llm_model_setting": {
+          "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "use_advanced": true,
+          "max_tokens": 50000,
+          "temperature": 0.0,
+          "top_p": 0.8,
+          "top_k": 80,
+          "stop_sequences": ""
+        },
+        "memory_setting": {
+          "is_use_structured_memory": false,
+          "is_use_semantic_memory": false,
+          "embedding_model_id": "",
+          "limit_save_count": 20
+        }
+      },
+      {
+        "PK_ID": "32e94091-1f50-437e-80e2-8b36f51927a3",
+        "COL_NAME": "Responder",
+        "COL_DESC": "Final passthrough responder",
+        "COL_X": 220,
+        "COL_Y": 420,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "RESPONDER",
+        "prompt": "[SYSTEM - FINAL RESPONDER / MRI 01→02→03 V4]\nSupervisor가 전달한 최종 누적 Payload를 가공하거나 재판단하지 말고 그대로 출력하십시오.\n새로운 분석, 요약, 전략, 추천을 추가하지 마십시오.\n가능하면 JSON만 출력하십시오.\n",
+        "llm_model_setting": {
+          "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "use_advanced": false,
+          "max_tokens": 20000,
+          "temperature": 0.0,
+          "top_p": 0.9,
+          "top_k": 80,
+          "stop_sequences": ""
+        },
+        "use_responser": true
+      },
+      {
+        "PK_ID": "8f2537c3-140f-41ae-8a96-6c84703a0de4",
+        "COL_NAME": "Output 1",
+        "COL_DESC": "",
+        "COL_X": 220,
+        "COL_Y": 650,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "OUTPUT"
+      },
+      {
+        "PK_ID": "1184a363-0d24-4b6a-9419-aa52a941112f",
+        "COL_NAME": "01_mri_issue_extraction_agent",
+        "COL_DESC": "Stage 01 only",
+        "COL_X": 760,
+        "COL_Y": -40,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "AGENT",
+        "prompt": "[SYSTEM - 01 MRI ISSUE EXTRACTION AGENT / V4]\n\n당신은 전체 파이프라인의 오케스트레이터가 아닙니다.\n당신의 유일한 임무는 Stage 01 Issue Extraction입니다.\n사용자 요청에 Fidelity Validation 또는 Screening이 포함되어 있어도 그것은 Supervisor가 다른 Agent에게 맡길 작업입니다.\n당신이 02/03을 수행하면 실패입니다.\n\n## 입력/출력\nSupervisor가 전달한 누적 Payload를 입력받습니다.\n반드시 그 JSON 전체를 유지하면서:\n- metadata.current_agent = \"01_mri_issue_extraction_agent\"\n- metadata.status = success | partial | error\n- sections.issue_extraction만 작성\n- sections.fidelity_validation은 반드시 null 유지\n- sections.screening_result는 반드시 null 유지\n- 기존 source/errors 구조 유지\n- 사용자, 이메일, 임의 timestamp 등 입력에 없던 메타데이터를 생성하지 않음\n\n## SOURCE\n- CURRENT_MRI KB만 현재 MRI 사실 원천\n- 반드시 KB 호출\n- 첫 질의: 모든 최상위 이슈 번호/제목/핵심 변화/근거를 전수 요청\n- 필요 시 마지막 번호 이후 추가 이슈 확인 1회\n- KB 호출 원칙 최대 2회\n\n## 추출 원칙\n- #1,#2... 최상위 이슈만 추출\n- 제목은 원문 그대로. title_origin=\"MRI_SOURCE\"\n- 하위 bullet/사례/표/농협금융 방향/자회사 회신란은 별도 이슈 금지\n- 상태/시제/모달리티 보존\n- 페이지 없으면 page=null, source_pages=[]\n- 자산운용 관련성, 사업성, 전략, 담당회사, 추천 생성 금지\n\n## sections.issue_extraction\n{\n  \"issues\": [{\n    \"topic_id\":\"S01\",\n    \"issue_no\":\"#1\",\n    \"issue_title\":\"\",\n    \"title_origin\":\"MRI_SOURCE\",\n    \"issue_summary\":\"\",\n    \"key_changes\":[],\n    \"mri_evidence\":[{\"page\":null,\"text\":\"\"}],\n    \"source_pages\":[]\n  }],\n  \"self_check\":{\n    \"kb_called\":true,\n    \"kb_call_count\":1,\n    \"detected_topic_count\":0,\n    \"detected_issue_numbers\":[],\n    \"sequence_complete\":true,\n    \"missing_or_duplicate_issue_numbers\":[],\n    \"page_provenance_available\":false,\n    \"forbidden_business_fields_present\":false,\n    \"future_stage_sections_untouched\":true,\n    \"unverified_items\":[]\n  }\n}\n\n## HARD STOP\n최종 누적 Payload JSON 하나만 반환하고 즉시 종료하십시오.\nFidelity Validation, Screening, 전체 분석 요약을 절대 작성하지 마십시오.\n",
+        "llm_model_setting": {
+          "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "use_advanced": true,
+          "max_tokens": 50000,
+          "temperature": 0.0,
+          "top_p": 0.8,
+          "top_k": 80,
+          "stop_sequences": ""
+        },
+        "recursion_limit": 15
+      },
+      {
+        "PK_ID": "8beb1466-7d42-418d-abaf-2f82f1e56139",
+        "COL_NAME": "02_source_fidelity_validator",
+        "COL_DESC": "Stage 02 only",
+        "COL_X": 760,
+        "COL_Y": 190,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "AGENT",
+        "prompt": "[SYSTEM - 02 SOURCE/FIDELITY VALIDATOR / V4]\n\n당신은 전체 파이프라인의 오케스트레이터가 아닙니다.\n당신의 유일한 임무는 Stage 02 Source/Fidelity Validation입니다.\nStage 01을 다시 수행하거나 Stage 03 Screening을 수행하면 실패입니다.\n\n## 입력/출력\nSupervisor가 Stage 01 완료 누적 Payload 전체를 전달합니다.\n반드시 전체 JSON을 유지하면서:\n- sections.issue_extraction은 한 글자도 수정하지 않음\n- metadata.current_agent = \"02_source_fidelity_validator\"\n- metadata.status 갱신\n- sections.fidelity_validation만 작성\n- sections.screening_result는 반드시 null 유지\n- 입력에 없던 임의 메타데이터 생성 금지\n\n## KB\nCURRENT_MRI KB를 사용하여 01 추출물이 MRI 원문에 충실한지만 대조합니다.\n외부 세계의 사실 진위를 검증하는 것이 아닙니다.\n\"공식자료 검증됨\", \"reliability HIGH\" 같은 외부검증 표현 금지.\n\n## 제목\ntitle_origin=\"MRI_SOURCE\"이면 원문 제목입니다.\n\"대응\", \"점검\", \"진단\"이라는 단어 자체를 recommendation leakage로 판정하지 마십시오.\n실제 KB의 최상위 제목과 다를 때만 title_fidelity WARN/FAIL.\n\n## 검증 항목\nsource_boundary\nissue_boundary\ntitle_fidelity\nstate_modality_fidelity\nmixed_state_aggregation\nrecommendation_leakage\nprovenance\n\nPASS / WARN / FAIL로 이슈별 판정.\npage=null/source_pages=[]는 메타데이터 부재 시 오류 아님.\n\n## sections.fidelity_validation\n{\n  \"status\":\"success\",\n  \"validation_results\":[{\n    \"topic_id\":\"S01\",\"issue_no\":\"#1\",\"issue_title\":\"\",\n    \"validation_status\":\"PASS\",\n    \"checks\":{\n      \"source_boundary\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"issue_boundary\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"title_fidelity\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"state_modality_fidelity\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"mixed_state_aggregation\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"recommendation_leakage\":{\"status\":\"PASS\",\"reason\":\"\"},\n      \"provenance\":{\"status\":\"PASS\",\"reason\":\"\"}\n    },\n    \"required_correction\":null\n  }],\n  \"summary\":{\n    \"validated_topic_count\":0,\n    \"pass_count\":0,\n    \"warn_count\":0,\n    \"fail_count\":0,\n    \"sequence_preserved\":true,\n    \"external_fact_verification_performed\":false\n  }\n}\n\n## HARD STOP\n최종 누적 Payload JSON 하나만 반환하고 종료하십시오.\nScreening, 자산운용 관련성, INCLUDE/EXCLUDE 판단을 절대 작성하지 마십시오.\n",
+        "llm_model_setting": {
+          "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "use_advanced": true,
+          "max_tokens": 50000,
+          "temperature": 0.0,
+          "top_p": 0.8,
+          "top_k": 80,
+          "stop_sequences": ""
+        },
+        "recursion_limit": 15
+      },
+      {
+        "PK_ID": "7036093f-40c4-46f6-9033-a860c3d83eb0",
+        "COL_NAME": "03_mri_screening_agent",
+        "COL_DESC": "Stage 03 only",
+        "COL_X": 760,
+        "COL_Y": 420,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "AGENT",
+        "prompt": "[SYSTEM - 03 MRI SCREENING AGENT / V4]\n\n당신의 유일한 임무는 Stage 03 MRI Screening입니다.\nStage 01/02를 다시 수행하지 마십시오.\nBO Hypothesis나 전략까지 진행하지 마십시오.\n\n## 입력/출력\nSupervisor가 Stage 02 완료 누적 Payload 전체를 전달합니다.\n- issue_extraction, fidelity_validation은 수정 금지\n- metadata.current_agent = \"03_mri_screening_agent\"\n- sections.screening_result만 작성\n- 전체 Payload 반환\n\n## 사용 가능\nMRI facts + 일반적인 국내 자산운용업 기능 지식(연결 메커니즘 설명용)\n\n## 금지\n- 외부검색 없이 실제 기업명/실제 경쟁상품명/시장성 사실을 새로 생성\n- 회사 현재 상품/내부현황 추정\n- 은행/증권사의 고유 상품·계좌를 자산운용사 직접 상품처럼 표현\n- 단순 \"성장산업 → ETF 가능\"으로 2점\n\n## 자산운용사 직접 영역\n공모/사모펀드, ETF, 재간접/자산배분형, TDF/TIF, OCIO/일임운용, 투자전략/포트폴리오 솔루션\n\n직접 상품으로 보지 않음:\n예금/대출/보험, 증권사 랩어카운트, ISA 계좌 자체, 브로커리지, 세무·법률 자문\n\n## 5 Lens\n각각 0/1/2. 총점 금지.\nproduct / investment_theme / customer / channel / group_collaboration\n\n2점 Gate:\nMRI fact → 구체 자산운용 메커니즘 → 실제 활용 가능성이\n외부 기업명·시장성·상품명 추가 조사 없이 현재 MRI만으로 성립해야 함.\n외부 검증이 필요하면 최대 1점.\n\nbasis_type:\nMRI_EXPLICIT\nMRI_PLUS_GENERAL_AM_MECHANISM\nEXTERNAL_VALIDATION_REQUIRED\nNO_LINK\n\nscore=2인데 EXTERNAL_VALIDATION_REQUIRED이면 규칙 위반.\n\n분류:\n하나라도 2 → OPPORTUNITY\n2 없이 1 존재 → MONITOR\n모두 0 → EXCLUDE\nvalidation FAIL → VALIDATION_BLOCKED\n\n## sections.screening_result\n{\n  \"status\":\"success\",\n  \"screening_results\":[{\n    \"topic_id\":\"S01\",\"issue_no\":\"#1\",\"issue_title\":\"\",\n    \"validation_status\":\"PASS\",\n    \"lens_scores\":{\n      \"product\":{\"score\":0,\"basis_type\":\"NO_LINK\",\"reason\":\"\"},\n      \"investment_theme\":{\"score\":0,\"basis_type\":\"NO_LINK\",\"reason\":\"\"},\n      \"customer\":{\"score\":0,\"basis_type\":\"NO_LINK\",\"reason\":\"\"},\n      \"channel\":{\"score\":0,\"basis_type\":\"NO_LINK\",\"reason\":\"\"},\n      \"group_collaboration\":{\"score\":0,\"basis_type\":\"NO_LINK\",\"reason\":\"\"}\n    },\n    \"classification\":\"MONITOR\",\n    \"classification_reason\":\"\",\n    \"connection_logic\":{\n      \"mri_change\":\"\",\n      \"asset_manager_mechanism\":\"\",\n      \"practical_possibility\":\"\"\n    },\n    \"recommend_detailed_analysis\":false,\n    \"recommendation_reason\":\"\",\n    \"needs_additional_research\":false,\n    \"additional_research_questions\":[],\n    \"confidence\":\"high\"\n  }],\n  \"screening_summary\":{\n    \"topic_count\":0,\n    \"opportunity_ids\":[],\n    \"monitor_ids\":[],\n    \"exclude_ids\":[],\n    \"validation_blocked_ids\":[]\n  },\n  \"self_check\":{\n    \"total_score_present\":false,\n    \"unsupported_named_entities_present\":false,\n    \"score2_external_validation_violation\":false,\n    \"asset_manager_role_leakage_present\":false\n  }\n}\n\n최종 누적 Payload JSON 하나만 반환하십시오.\n",
+        "llm_model_setting": {
+          "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "use_advanced": true,
+          "max_tokens": 50000,
+          "temperature": 0.0,
+          "top_p": 0.8,
+          "top_k": 80,
+          "stop_sequences": ""
+        },
+        "recursion_limit": 15
+      },
+      {
+        "PK_ID": "fdb2690a-f061-4db1-904d-37acb4cbfa1f",
+        "COL_NAME": "kb-6b0fd700",
+        "COL_DESC": "CURRENT_MRI",
+        "COL_X": 1200,
+        "COL_Y": 75,
+        "COL_COLSPAN": 0,
+        "COL_ROWSPAN": 0,
+        "COL_MINROW": 0,
+        "COL_MINCOLUMN": 0,
+        "COL_MAXROW": 0,
+        "COL_MAXCOLUMN": 0,
+        "COL_WIDTH": null,
+        "COL_HEIGHT": null,
+        "node_type": "KNOWLEDGBASE",
+        "index_name": "kb-6b0fd700",
+        "search_type": "rag"
+      }
+    ],
+    "JoinMaps": [
+      {
+        "FK_START_MAP_ID": "2a15becb-179a-484b-91dd-fcc00778b7ae",
+        "FK_END_MAP_ID": "32e94091-1f50-437e-80e2-8b36f51927a3",
+        "edge_type": "FIXED",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "32e94091-1f50-437e-80e2-8b36f51927a3",
+        "FK_END_MAP_ID": "8f2537c3-140f-41ae-8a96-6c84703a0de4",
+        "edge_type": "FIXED",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "2a15becb-179a-484b-91dd-fcc00778b7ae",
+        "FK_END_MAP_ID": "1184a363-0d24-4b6a-9419-aa52a941112f",
+        "edge_type": "FLOW",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "2a15becb-179a-484b-91dd-fcc00778b7ae",
+        "FK_END_MAP_ID": "8beb1466-7d42-418d-abaf-2f82f1e56139",
+        "edge_type": "FLOW",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "2a15becb-179a-484b-91dd-fcc00778b7ae",
+        "FK_END_MAP_ID": "7036093f-40c4-46f6-9033-a860c3d83eb0",
+        "edge_type": "FLOW",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "1184a363-0d24-4b6a-9419-aa52a941112f",
+        "FK_END_MAP_ID": "fdb2690a-f061-4db1-904d-37acb4cbfa1f",
+        "edge_type": "HAS",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      },
+      {
+        "FK_START_MAP_ID": "8beb1466-7d42-418d-abaf-2f82f1e56139",
+        "FK_END_MAP_ID": "fdb2690a-f061-4db1-904d-37acb4cbfa1f",
+        "edge_type": "HAS",
+        "MAPPINGVALUE": [],
+        "DisplayName": "",
+        "SubDesc": null,
+        "condition_key": null
+      }
+    ]
+  }
+}
