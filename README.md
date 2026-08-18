@@ -27,15 +27,19 @@ ADR-001의 영향을 받는 04~08 Component의 Architecture, 역할 및 호출�
 ## Current Status
 
 - Current Canonical Pack: `v20260818`
-- Canonical Prompt Pack `v20260818`: retained as stored baseline
-- Latest Master Plan: `MRI_AI_POC_MASTER_PLAN_v20260818_r2.md`
-- Latest Development Roadmap: `MRI_AI_POC_DEVELOPMENT_ROADMAP_v20260818_r2.md`
+- Canonical Prompt Pack `v20260818`: retained as stored baseline; newer AIR candidate rules are pending runtime validation
+- Latest Master Plan: `MRI_AI_POC_MASTER_PLAN_v20260818_r4.md`
+- Latest Development Roadmap: `MRI_AI_POC_DEVELOPMENT_ROADMAP_v20260818_r4.md`
+- Current Development Checkpoint: `MRI_AI_POC_DEVELOPMENT_CHECKPOINT_20260818.md`
 - ADR-001: `ACCEPTED`
 - Architecture: Hypothesis-Driven External Research
-- Next development: Business Opportunity Hypothesis Agent
+- Front Logical Contract: `r4 defined`
+- AIR v4 Supervisor orchestration: `GENERATED / RUNTIME TEST PENDING`
+- Next logical development: Business Opportunity Hypothesis
 - External Evidence components 04~07: `ARCHITECTURE REVISION PENDING`
 - ZeroIn 08: developed/regression-tested logic exists, but its role is being repositioned primarily to `OPPORTUNITY_VALIDATION`
-- AIR Runtime: Unvalidated / Deferred
+- IT feasibility check: `READY TO START IN PARALLEL`
+- AIR Runtime: core compatibility gates passed in current environment; front-pipeline orchestration still in progress
 - Generalization verified: No
 
 ## Architecture
