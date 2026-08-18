@@ -1,151 +1,122 @@
 # MRI AI PoC Development Checkpoint — 2026-08-18
 
-## Current Git baseline
+## Current Git baseline before this update
 
-Previous checkpoint commit:
-`d59b9cc` — `docs: checkpoint AIR runtime and roadmap 2026-08-18`
+Latest known baseline:
+`d22eac2` — `docs: update current project pointers to r4`
 
-This file is a living current-status summary. Historical states remain in Git history.
+This checkpoint is a living current-status summary.
 
-## Decisions added after d59b9cc
+## New architecture clarification — ADR-002
 
-### 1. Fidelity Correction Contract
+Department Review is **not** the final purpose of the PoC and is **not** normally performed only after Strategy.
 
-Raw Stage 01 output is preserved:
-`issue_extraction = raw source-derived output`
+The owner / AI:
+- independently screens and analyzes all relevant MRI issues,
+- performs BO / external / internal / gap / strategy work,
+- and synthesizes the final MRI response.
 
-Stage 02 owns:
-`validated_issue_view`
+Relevant departments independently review screened issues in parallel and provide:
+- current activities,
+- actions they can take,
+- opportunities / ideas,
+- future plans.
 
-Statuses:
-`PASS | CORRECTABLE | FAIL`
+Their responses are one internal evidence source.
 
-Flow:
+## Updated workflow
+
 ```text
-PASS
-→ validated_issue_view
+MRI
+→ Extraction
+→ Fidelity / Validated View
 → Screening
+    ├→ Deep Analysis
+    │   ├→ BO
+    │   ├→ External Evidence
+    │   └→ Validated Opportunity
+    │
+    └→ Department Review
+        └→ Department Responses
 
-CORRECTABLE
-→ minimum correction
-→ validated_issue_view
-→ Screening
-
-FAIL
-→ no Screening
-→ retry / VALIDATION_BLOCKED
+Validated Opportunity
++
+Internal Data / Documents
++
+Department Responses
+→ Company State / Evidence Integration
+→ Gap
+→ Strategy
+→ Final MRI Response
 ```
 
-03 Screening must use `validated_issue_view`, not raw `issue_extraction`.
+## What changed from r4
 
-### 2. Deterministic Validation Flow
+Removed as normal architecture:
+`Strategy → Final Department Routing → Department Request`
 
-LLM self-check is diagnostic only.
+Replaced by:
+`Screening → parallel Department Review`
 
-Structural conditions should be enforced deterministically where feasible:
-- issue array
-- duplicate topic_id
-- stage ownership fields
-- five screening lenses
-- score range
-- no total score
-- deterministic classification consistency
+Department response is not equivalent to Company Current State; it is one source within it.
 
-Semantic validation remains LLM-based.
+## Existing r4 decisions remain
 
-Retry:
-- one retry only
-- second Stage 01 structural fail → WORKFLOW_ERROR
-- second Fidelity FAIL → VALIDATION_BLOCKED
+### Fidelity
+- raw extraction preserved
+- Stage 02 creates validated_issue_view
+- PASS / CORRECTABLE / FAIL
+- Screening uses validated view
 
-`errors[]` is now active.
+### Validation
+- deterministic structural gate where feasible
+- semantic validation by LLM
+- self-check diagnostic only
+- one retry
+- WORKFLOW_ERROR / VALIDATION_BLOCKED
+- active errors[]
 
-### 3. analysis_as_of_date Ownership
+### analysis_as_of_date
+- owned by Workflow Start
+- CURRENT default execution date
+- HISTORICAL_REPLAY explicit required date
 
-Owner:
-`Workflow Start`
+### BO
+- default 1–3 / max 4
+- no duplication by scope alone
+- evidence question normalize / dedup before Router
 
-CURRENT:
-- workflow execution date if user did not provide one.
+## AIR
 
-HISTORICAL_REPLAY:
-- required input.
-
-Downstream Agents / Tools inherit but do not mutate.
-
-### 4. BO Explosion Control
-
-Per MRI issue:
-- default 1–3 BOs
-- hard max 4
-
-Do not create a separate BO only because `opportunity_scope` differs.
-
-Evidence Questions:
-`Generate → Normalize → Deduplicate / Merge → Router`
-
-## AIR status
-
-### v4
-File:
-`MRI_01_02_03_v4_SUPERVISOR_ORCHESTRATED.json`
-
-Purpose:
-- validate Supervisor-managed stage ownership.
-
-Status:
+v4:
 `GENERATED / RUNTIME TEST PENDING`
 
-Do not mark PASS yet.
+Purpose remains:
+- Supervisor-managed stage ownership test only.
 
-### v5
-Will be created only after v4 runtime result.
+Department Review lane does not need to be implemented before the v4 test.
 
-Target:
-- validated_issue_view
-- PASS/CORRECTABLE/FAIL
-- blocking / retry
-- deterministic structural gate
-- active errors[]
-- analysis_as_of_date
+## Current logical development target
 
-## Canonical Prompt status
+```text
+BO H03
+→ BO Production Prompt v1
+→ Evidence Question dedup
+→ Validation Router
+```
 
-Do not promote v4 directly into a new Canonical Prompt Pack yet.
+In parallel:
+- Department Review request/response contract
+- IT feasibility inquiry
 
-Current stance:
-`AIR candidate rules = pending runtime validation`
+## Current state
 
-After runtime stabilization:
-- create next Canonical Prompt Pack version,
-- update canonical pointer,
-- reconcile stale downstream/role flags.
-
-## Immediate next logical work
-
-`BO H02 regression → BO production prompt v1 → Evidence Question normalization/dedup → Validation Router`
-
-## Parallel work
-
-Send lightweight IT feasibility questions before the full data-spec request.
-
-Check:
-- ZeroIn historical as-of
-- requested-period setup change
-- FreeSIS historical replay
-- AIR-callable interface
-- News full text
-- Policy full text + status/effective date
-
-## Current state labels
-
-- Architecture: substantially defined
-- Front Logical Contract: r4 defined
-- AIR front physical orchestration: in progress
-- v4 Supervisor orchestration: runtime pending
-- deterministic gate: logical design defined / implementation pending
-- BO Hypothesis: in development
-- Evidence Question: in development
-- Dataset request: pending router/spec
-- IT feasibility: ready to start in parallel
+- ADR-001: ACCEPTED
+- ADR-002: ACCEPTED
+- Master Plan: r5
+- Roadmap: r5
+- AIR v4: runtime pending
+- BO: in development
+- Department Review: logical lane defined
+- Company State / Gap / Strategy: not developed
 - Generalization: NOT VERIFIED
