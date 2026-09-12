@@ -1,5 +1,5 @@
 {
-  "ID": "188b9609-a73b-47e1-8a0b-74e657ff7959",
+  "ID": "2094dbc0-52c1-4a41-820a-3e5ee725e2ba",
   "Name": "MRI Agent1 - Screening & Handoff",
   "Desc": "MRI extraction -> fidelity -> screening -> issue context package",
   "ModelType": "OCST",
@@ -40,7 +40,7 @@
       {
         "PK_ID": "d4919b16-c50a-4907-8983-d0c6e9e15c61",
         "COL_NAME": "Responder",
-        "COL_DESC": "AIR Studio mandatory responder",
+        "COL_DESC": "Pass-through only. Must not rewrite upstream final output.",
         "COL_X": 166,
         "COL_Y": 356,
         "COL_COLSPAN": 0,
@@ -52,12 +52,12 @@
         "COL_WIDTH": null,
         "COL_HEIGHT": null,
         "node_type": "RESPONDER",
-        "prompt": "실행결과 출력",
+        "prompt": "[RESPONDER - MRI SCREENING]\n\n너는 작성자가 아니라 전달자다. 상위 노드(03X)가 만든 값을 요약·재작성·보완하지 않는다.\n\n화면에 다음 순서로 출력한다.\n\n1) 스크리닝 결과 — screening_dashboard를 표가 아닌 줄 목록으로 그대로 옮긴다.\n\n   S01  #1  〔issue_title〕\n        판정 OPPORTUNITY / 연구권고 O\n        사유 〔classification_reason〕\n\n   issue_id, issue_no, issue_title, classification, recommended_for_research,\n   classification_reason를 한 건도 빠뜨리지 않는다. EXCLUDE / VALIDATION_BLOCKED도 그대로 표시한다.\n\n2) 한 줄 안내\n   \"아래 JSON 전체를 복사해 Research 채팅에 붙여넣고, 조사할 이슈를 지정하십시오. 예: S06 조사해줘\"\n\n3) 03X가 반환한 JSON 객체 전체를 코드블록으로 그대로 출력한다.\n   handoff_version / upstream_stage / source_document / screening_dashboard / issue_context_packages\n   전부 포함한다.\n\n금지:\n- original_mri_excerpt, upstream_issue_summary, must_preserve_themes, lens_results를 줄이거나 다시 쓰는 것\n- 이슈를 골라내 일부만 싣는 것\n- JSON 밖에 해설을 덧붙이는 것\n",
         "llm_model_setting": {
           "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
           "use_advanced": false,
-          "max_tokens": 12000,
-          "temperature": 0.1,
+          "max_tokens": 50000,
+          "temperature": 0,
           "top_p": 0.95,
           "top_k": 120,
           "stop_sequences": ""

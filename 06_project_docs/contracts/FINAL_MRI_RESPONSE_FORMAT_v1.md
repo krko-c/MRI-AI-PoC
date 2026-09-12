@@ -53,6 +53,37 @@ A–F 라벨, BO/RQ ID, portfolio bucket 이름, readiness enum, evidence ID는 
 
 이 완화는 Hard Fail Evaluator v2의 `HF09`와 Golden Test v2의 실패조건에 함께 반영되어 있다.
 
+## Responder는 통과 전용
+
+`final_report_text`가 이 양식대로 화면에 뜨려면 Responder가 그것을 다시 쓰지 않아야 한다.
+두 워크플로의 Responder 프롬프트가 `"실행결과 출력"` 한 줄이던 상태에서는
+JSON을 그대로 덤프하거나 본문을 요약해버릴 수 있었다 (v4에서 실제로 발생한 실패).
+
+현재 규정:
+- Agent 2 Responder — `final_report_text`를 한 글자도 바꾸지 않고 렌더(`\n`은 실제 줄바꿈,
+  □/○/- 계층 유지) → 추적정보 → JSON 전문. 요약·문장 다듬기·블록 생략·내부 라벨 노출 금지.
+- Agent 1 Responder — 스크리닝 목록 전건(EXCLUDE 포함) + handoff JSON 전문.
+- 두 Responder 모두 `temperature 0`, `max_tokens 50000`.
+
+## 당사(OWN_COMPANY) 현황의 출처
+
+□ (현황) 당사 현황을 채우려면 05 검색계획이 당사 조회 태스크를 만들어야 한다.
+당사 표기가 소스마다 다르므로 05에 소스별 매핑을 하드룰로 고정했다.
+
+| 소스 | 표기 |
+|---|---|
+| mri_zeroin_public / public2 / etf | NH-Amundi운용 |
+| mri_freesis | 엔에이치아문디자산운용 (협회 표기) |
+| mri_news | 두 표기 + NH아문디 / NH-Amundi / NH아문디자산운용 |
+
+ZeroIn 태스크에 협회 표기를, FreeSIS 태스크에 ZeroIn 표기를 쓰는 것을 금지한다.
+당사 태스크는 `company_scope="OWN_COMPANY"`로 표시하고 경쟁사 쿼리와 분리한다.
+
+연결된 소스가 없어 채울 수 없는 항목 — 과거 시도·중단 기획 / 파이프라인 / 채널 전략 /
+부서 검토 이력 — 은 검색 태스크를 만들지 않고 `unresearchable_company_items`에 기록한다.
+07이 이를 `data_gaps`로 승계하고 `final_report_domain_coverage`에
+"내부 문서 소스 미연결" 사유를 남긴다. **빈 배열을 "당사는 해당 활동 없음"으로 읽지 않는다.**
+
 ## 관련 파일
 
 - `05_runtime/AIR_MAPPING/MRI_Agent2_Research_Response_v2.json` — node 10 구현
