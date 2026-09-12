@@ -1,0 +1,210 @@
+{
+  "artifact_type": "MRI_HARD_FAIL_EVALUATOR_SPEC",
+  "version": "2026-09-12.v2",
+  "purpose": "MRI Research & Response 결과의 구조적/근거/표현 오류를 자동 또는 반자동 판정",
+  "decision_logic": {
+    "result_values": [
+      "PASS",
+      "FAIL"
+    ],
+    "rule": "hard_fail_count > 0 이면 최종 FAIL. hard fail이 없을 때만 soft score를 참고.",
+    "severity_order": [
+      "HARD_FAIL",
+      "MAJOR",
+      "MINOR"
+    ]
+  },
+  "hard_fail_rules": [
+    {
+      "rule_id": "HF01",
+      "name": "UNSUPPORTED_FACT_GENERATION",
+      "description": "근거 없는 숫자·날짜·기업·상품·정책·당사 이력 생성",
+      "detect": [
+        "Final/Strategy의 구체 사실이 supporting evidence에 존재하지 않음",
+        "숫자/날짜가 upstream evidence와 일치하지 않음"
+      ]
+    },
+    {
+      "rule_id": "HF02",
+      "name": "NOT_FOUND_TO_ABSENCE",
+      "description": "NOT_FOUND/NO_RESULT를 '없음/미보유/미운영'으로 단정",
+      "detect": [
+        "retrieval status가 NO_RESULT/NOT_FOUND인데 downstream 문구가 존재 부재 사실로 변환됨"
+      ]
+    },
+    {
+      "rule_id": "HF03",
+      "name": "MUST_PRESERVE_THEME_LOSS",
+      "description": "material must_preserve theme가 근거 또는 gap 표시 없이 사라짐",
+      "detect": [
+        "traceability.must_preserve_themes_covered + _unsupported 합집합이 입력 must_preserve_themes를 덮지 못함",
+        "unsupported로 분류됐는데 F_additional_checks에도 나타나지 않음"
+      ]
+    },
+    {
+      "rule_id": "HF04",
+      "name": "EVIDENCE_COMPRESSION_LOSS",
+      "description": "upstream의 풍부한 정량근거를 Final에서 일반론으로 축약하여 핵심 정보 손실",
+      "detect": [
+        "fund_market_snapshot에 값이 있으나 Final의 관련 현황에 상품수/AUM/Flow/성과/시장맥락이 누락"
+      ]
+    },
+    {
+      "rule_id": "HF05",
+      "name": "POLICY_MATURITY_UPGRADE",
+      "description": "논의<검토/추진<발표/계획<확정/의결<시행 단계 승격",
+      "detect": [
+        "source maturity보다 downstream 표현이 상위 단계"
+      ]
+    },
+    {
+      "rule_id": "HF06",
+      "name": "INFERENCE_TO_FACT",
+      "description": "INFERENCE/PARTIAL을 확정적 FACT처럼 표현",
+      "detect": [
+        "Evidence status가 INFERENCE/PARTIAL인데 Final에서 단정문으로 변환"
+      ]
+    },
+    {
+      "rule_id": "HF07",
+      "name": "FINAL_NEW_STRATEGY",
+      "description": "Final이 09 Strategy에 없는 신규 전략 생성",
+      "detect": [
+        "final_report.E_action_plan[].strategy_id 가 09 strategies[].strategy_id 에 없음",
+        "traceability.strategy_ids_used 에 09에 없는 ID가 포함됨"
+      ]
+    },
+    {
+      "rule_id": "HF08",
+      "name": "READINESS_UPLIFT",
+      "description": "CONDITIONAL/MONITOR 전략을 Final에서 확정추진처럼 상향",
+      "detect": [
+        "CONDITIONAL인데 Final 표현이 '추진/실행'으로 확정적",
+        "MONITOR인데 실행 Action처럼 표현"
+      ]
+    },
+    {
+      "rule_id": "HF09",
+      "name": "RESEARCH_AS_ACTION",
+      "description": "대상·방식·목적이 없는 빈 검토를 계획으로 제시 (readiness에 맞는 검토 표현 자체는 허용)",
+      "detect": [
+        "(계획) 항목에 무엇을/누구에게/어떤 방식으로 중 2개 이상이 없음",
+        "readiness=READY 인데 '검토/확인' 어휘로 후퇴",
+        "판단 불가 항목이 추가 확인사항이 아니라 계획에 들어감"
+      ],
+      "allowed_examples": [
+        "주식보상 수혜 임직원 대상 글로벌 분산형 상품을 기업 제휴채널에 공급하는 방안 검토 (CONDITIONAL)"
+      ],
+      "forbidden_examples": [
+        "관련 ETF 출시 검토",
+        "협업 강화",
+        "마케팅 확대"
+      ]
+    },
+    {
+      "rule_id": "HF10",
+      "name": "ASSET_MANAGER_BOUNDARY_BREACH",
+      "description": "운용사가 직접 할 수 없는 은행/증권/recordkeeping 기능을 단독전략으로 제안",
+      "detect": [
+        "은행/증권 고유기능(직접판매·계좌개설·recordkeeping 등)을 운용사 단독 실행으로 표현",
+        "08 ASSET MANAGER BOUNDARY 가드 위반"
+      ]
+    },
+    {
+      "rule_id": "HF11",
+      "name": "UNVERIFIED_INTERNAL_CAPABILITY",
+      "description": "근거 없는 당사/그룹 조직·채널·플랫폼·파트너십을 보유 사실로 단정",
+      "detect": [
+        "company_status_snapshot 또는 원문에 없는 capability를 Strategy/Final에서 사실로 사용"
+      ]
+    },
+    {
+      "rule_id": "HF12",
+      "name": "RETRIEVAL_SUCCESS_WITHOUT_EXECUTION",
+      "description": "실제 KB 호출 없이 SUCCESS로 기록",
+      "detect": [
+        "kb_tool_called=false 인데 retrieval_status=SUCCESS",
+        "실제 호출 증빙 없이 SUCCESS 기록"
+      ]
+    },
+    {
+      "rule_id": "HF13",
+      "name": "MISSING_VISIBLE_REPORT",
+      "description": "final_report_text 누락 또는 A-F 라벨·내부 ID가 가시 본문에 노출",
+      "detect": [
+        "final_report_text 필드 없음/빈 문자열",
+        "final_report_text 안에 A_/B_/BO/RQ/QUICK_WIN/READY 등 내부 라벨 노출",
+        "가시 본문이 현황/계획 구조가 아님"
+      ]
+    }
+  ],
+  "major_rules": [
+    {
+      "rule_id": "MJ01",
+      "name": "SHALLOW_PORTFOLIO_PRESENTED_AS_COMPREHENSIVE",
+      "description": "단일 축 전략인데 포괄적 대응으로 표현"
+    },
+    {
+      "rule_id": "MJ02",
+      "name": "NO_CLEAR_PRIORITY",
+      "description": "전략 우선순위가 불명확하거나 priority_rank 중복"
+    },
+    {
+      "rule_id": "MJ03",
+      "name": "VAGUE_ACTION",
+      "description": "협업 강화/마케팅 확대/상품 검토처럼 대상·방식이 없는 Action"
+    },
+    {
+      "rule_id": "MJ04",
+      "name": "MISSING_MATERIAL_COMPANY_STATUS",
+      "description": "당사 상품/성과/과거 실패/중단/파이프라인 등 material upstream 정보 누락"
+    }
+  ],
+  "evaluation_input_schema": {
+    "required": [
+      "handoff_context",
+      "research_output_07",
+      "business_opportunity_08",
+      "strategy_output_09",
+      "final_output_10"
+    ],
+    "optional": [
+      "retrieval_logs",
+      "planner_output_05",
+      "retrieval_results_06"
+    ],
+    "note": "final_output_10 은 A-F JSON + final_report_text 를 모두 포함해야 한다. 구조 판정은 JSON, 표현 판정은 final_report_text."
+  },
+  "evaluation_output_schema": {
+    "result": "PASS|FAIL",
+    "hard_fail_count": 0,
+    "hard_fails": [
+      {
+        "rule_id": "HFxx",
+        "status": "TRIGGERED|CLEAR|NOT_EVALUABLE",
+        "evidence": [],
+        "explanation": "string"
+      }
+    ],
+    "major_issues": [],
+    "soft_score": {
+      "source_fidelity": 0,
+      "research_coverage": 0,
+      "evidence_integrity": 0,
+      "business_opportunity_quality": 0,
+      "strategy_executability": 0,
+      "final_report_quality": 0,
+      "total": 0
+    },
+    "release_decision": "RELEASE|REVISE|BLOCK",
+    "required_fixes": []
+  },
+  "recommended_execution_order": [
+    "1. structural checks",
+    "2. source-fidelity checks",
+    "3. evidence-status checks",
+    "4. strategy provenance/readiness checks",
+    "5. final-report preservation checks",
+    "6. score only if no hard fail"
+  ]
+}

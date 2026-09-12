@@ -1,0 +1,287 @@
+{
+  "artifact_type": "MRI_AGENT_HANDOFF_SCHEMA",
+  "version": "2026-09-12.v2",
+  "purpose": "Agent 1 Screening 결과를 Agent 2 Research & Response에 정보손실 없이 전달하기 위한 고정 계약",
+  "contract": {
+    "producer": "MRI Screening Agent",
+    "consumer": "MRI Research & Response Agent",
+    "unit_of_work": "ONE_ISSUE",
+    "authoritative_source_priority": [
+      "original_mri_excerpt",
+      "fidelity.must_preserve_themes",
+      "screening",
+      "upstream_issue_summary"
+    ]
+  },
+  "hard_rules": [
+    "issue_id는 Agent 1의 upstream topic_id를 그대로 복사한다. 새 ID를 생성하거나 재번호화하지 않는다.",
+    "original_mri_excerpt는 요약본으로 대체하거나 덮어쓰지 않는다.",
+    "must_preserve_themes는 Agent 2에서 삭제·재작성·확장하지 않고 fidelity anchor로 유지하며, 10번 traceability에 covered/unsupported로 회수한다.",
+    "Agent 2는 screening classification을 재분류하지 않는다.",
+    "Agent 2는 selected issue의 연구범위를 임의로 다른 MRI 이슈까지 확장하지 않는다.",
+    "Issue Context Package와 MRI 전체 원문이 충돌하면 원문을 우선하고 discrepancy를 기록한다.",
+    "Screening 결과는 연구의 시작점이지 사실근거가 아니다. 외부 사실은 Retrieval/Evidence에서 별도 검증한다."
+  ],
+  "agent2_intake_checks": [
+    "필수 필드 존재",
+    "issue_id 형식 및 upstream topic_id 보존",
+    "original_mri_excerpt 비어있지 않음",
+    "fidelity.must_preserve_themes 1개 이상",
+    "classification과 recommended_for_research의 논리적 일관성",
+    "selected issue 외 다른 issue 혼입 없음",
+    "lens_results 5개 키 모두 존재(언더스코어 표기)"
+  ],
+  "example": {
+    "handoff_version": "MRI_ISSUE_CONTEXT_V1",
+    "upstream_stage": "SCREENING_COMPLETED",
+    "source_document": {
+      "document_id": "MRI_2026_04",
+      "document_title": "2026-제4호 MRI 리포트",
+      "source_type": "PDF",
+      "current_mri_available_to_research_agent": true
+    },
+    "issue_context_packages": [
+      {
+        "package_version": "MRI_ISSUE_CONTEXT_V1",
+        "issue": {
+          "issue_id": "S06",
+          "issue_no": "#6",
+          "issue_title": "기업 임직원 자산관리 서비스 경쟁 대응",
+          "original_mri_excerpt": "[원문 verbatim 삽입]",
+          "upstream_issue_summary": "B2B 금융복지 확대와 주식보상·퇴직연금·WM 경쟁 심화 대응 필요"
+        },
+        "fidelity": {
+          "status": "PASS",
+          "must_preserve_themes": [
+            "B2B 금융복지",
+            "주식보상(RSU/RSA/ESPP 등)",
+            "임직원 WM·금융교육",
+            "퇴직연금",
+            "기업 제휴·플랫폼 경쟁",
+            "금융회사 간 경쟁"
+          ],
+          "prohibited_expansion": [
+            "S06를 퇴직연금 단일 이슈로 축소하지 않는다"
+          ]
+        },
+        "screening": {
+          "classification": "OPPORTUNITY",
+          "screening_rationale": "고객·채널·상품·그룹 협업 관점에서 사업기회 검토 가능",
+          "recommended_for_research": true,
+          "lens_results": {
+            "Product": {
+              "score": 0,
+              "reason": ""
+            },
+            "Investment_Theme": {
+              "score": 0,
+              "reason": ""
+            },
+            "Customer": {
+              "score": 0,
+              "reason": ""
+            },
+            "Channel": {
+              "score": 0,
+              "reason": ""
+            },
+            "Group_Collaboration": {
+              "score": 0,
+              "reason": ""
+            }
+          }
+        }
+      }
+    ]
+  },
+  "envelope_schema": {
+    "handoff_version": {
+      "const": "MRI_ISSUE_CONTEXT_V1"
+    },
+    "upstream_stage": {
+      "const": "SCREENING_COMPLETED"
+    },
+    "source_document": {
+      "required": [
+        "document_id"
+      ],
+      "properties": {
+        "document_id": {
+          "type": "string"
+        },
+        "document_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "document_date_or_edition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_type": {
+          "enum": [
+            "PDF",
+            "TEXT",
+            "OTHER"
+          ]
+        },
+        "current_mri_available_to_research_agent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "screening_dashboard": {
+      "type": "array"
+    },
+    "issue_context_packages": {
+      "type": "array",
+      "items": "package_object_schema"
+    }
+  },
+  "package_object_schema": {
+    "type": "object",
+    "additionalProperties": true,
+    "required": [
+      "package_version",
+      "issue",
+      "fidelity",
+      "screening"
+    ],
+    "properties": {
+      "package_version": {
+        "const": "MRI_ISSUE_CONTEXT_V1"
+      },
+      "issue": {
+        "required": [
+          "issue_id",
+          "issue_title",
+          "original_mri_excerpt",
+          "upstream_issue_summary"
+        ],
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "pattern": "^S[0-9]+$"
+          },
+          "issue_no": {
+            "type": "string"
+          },
+          "issue_title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "original_mri_excerpt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_evidence_snippets": {
+            "type": "array"
+          },
+          "upstream_issue_summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_issue_detail": {
+            "type": "array"
+          },
+          "source_key_changes": {
+            "type": "array"
+          }
+        }
+      },
+      "fidelity": {
+        "required": [
+          "status",
+          "must_preserve_themes"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "PASS",
+              "CORRECTABLE",
+              "FAIL"
+            ]
+          },
+          "corrections": {
+            "type": "array"
+          },
+          "must_preserve_themes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "prohibited_expansion": {
+            "type": "array"
+          }
+        }
+      },
+      "screening": {
+        "required": [
+          "classification",
+          "screening_rationale",
+          "recommended_for_research",
+          "lens_results"
+        ],
+        "properties": {
+          "classification": {
+            "enum": [
+              "OPPORTUNITY",
+              "MONITOR",
+              "EXCLUDE",
+              "VALIDATION_BLOCKED"
+            ]
+          },
+          "screening_rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommended_for_research": {
+            "type": "boolean"
+          },
+          "lens_results": {
+            "required": [
+              "Product",
+              "Investment_Theme",
+              "Customer",
+              "Channel",
+              "Group_Collaboration"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "Product": {
+                "type": "object"
+              },
+              "Investment_Theme": {
+                "type": "object"
+              },
+              "Customer": {
+                "type": "object"
+              },
+              "Channel": {
+                "type": "object"
+              },
+              "Group_Collaboration": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "source_access": {
+        "properties": {
+          "research_agent_should_recheck_current_mri": {
+            "type": "boolean"
+          },
+          "current_mri_is_authoritative": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

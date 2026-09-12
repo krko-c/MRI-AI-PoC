@@ -1,0 +1,160 @@
+{
+  "artifact_type": "MRI_GOLDEN_TEST_CASE",
+  "version": "2026-09-12.v2",
+  "case_id": "GOLDEN_S06_001",
+  "issue_id": "S06",
+  "issue_title": "기업 임직원 자산관리 서비스 경쟁 대응",
+  "test_objective": "Agent 2가 원문 이슈 범위를 보존하면서, 근거 기반 조사→Evidence→BO→Strategy→Final을 수행하는지 검증",
+  "source_truth": {
+    "must_preserve_themes": [
+      "B2B 금융복지",
+      "주식보상(RSU/RSA/ESPP 등)",
+      "임직원 WM·금융교육",
+      "퇴직연금",
+      "기업 제휴·플랫폼 경쟁",
+      "금융회사 간 경쟁"
+    ],
+    "known_source_facts": [
+      "기업 고객과 임직원을 신규 고객기반으로 선점하려는 경쟁이 확대되고 있다는 문제의식",
+      "기업 인재 확보·유지 수요와 금융권 고객기반 확대 수요가 결합된 B2B 금융복지 시장 부상",
+      "주식보상 확대와 RSU 등 활용 유인 증가",
+      "퇴직연금 시장 성장 및 실적배당형 상품 비중 확대",
+      "삼성증권 AT WORK, 신한투자증권 워크플레이스 WM 등 기업·임직원 대상 경쟁 사례 존재"
+    ],
+    "source_scope_guard": "S06는 퇴직연금 이슈만이 아니라 주식보상·WM·금융교육·기업제휴/플랫폼 경쟁을 포괄한다."
+  },
+  "minimum_research_expectations": {
+    "research_questions": [
+      "정책/제도 변화가 기업 임직원 자산관리 수요 확대를 뒷받침하는가",
+      "주식보상 확대가 금융/자산관리 수요로 연결되는 근거가 있는가",
+      "퇴직연금 및 실적배당형 시장 규모/성장이 확인되는가",
+      "금융회사들이 기업·임직원 대상 어떤 서비스/플랫폼으로 경쟁하는가",
+      "자산운용사가 실행 가능한 상품·콘텐츠·채널·협업 기회가 무엇인가"
+    ],
+    "open_discovery_required": true,
+    "minimum_evidence_domains": [
+      "industry_customer",
+      "policy_regulation",
+      "financial_competitors"
+    ],
+    "conditional_domains": [
+      "asset_management_fund_market",
+      "company_status"
+    ]
+  },
+  "minimum_final_expectations": {
+    "core_judgment": {
+      "required": true,
+      "rules": [
+        "결론 우선",
+        "2~4문장",
+        "왜 중요한지 + 가장 중요한 확인 사실 + 가장 유망한 기회 + 권고 방향 포함",
+        "검토 필요만으로 끝내지 않음"
+      ]
+    },
+    "status_sections": {
+      "must_include_when_supported": [
+        "산업·고객",
+        "정책·규제",
+        "금융업권·경쟁사",
+        "자산운용·펀드시장",
+        "당사 현황"
+      ],
+      "quantitative_preservation_rule": "상품수/AUM/Flow/성과/신규설정·청산/상위사·상품/시장대비 수치가 upstream에 있으면 Final에서 누락하지 않는다."
+    },
+    "strategy": {
+      "minimum_distinct_directions": 2,
+      "must_have_priority": true,
+      "must_respect_asset_manager_boundary": true,
+      "examples_of_allowed_direction_types": [
+        "상품/솔루션",
+        "기존 상품 활용",
+        "고객·채널",
+        "콘텐츠·마케팅",
+        "그룹·제휴"
+      ],
+      "readiness_wording": {
+        "READY": [
+          "추진",
+          "개발",
+          "확대",
+          "운영",
+          "연계"
+        ],
+        "CONDITIONAL": [
+          "추진 검토",
+          "상품화 검토",
+          "Pilot 추진",
+          "협업방안 구체화"
+        ],
+        "MONITOR": [
+          "모니터링",
+          "재검토"
+        ],
+        "판단_불가": "추가 확인사항으로 이동"
+      }
+    },
+    "visible_layout": {
+      "핵심_판단": "2-4문장, 선택이 아니라 포함",
+      "현황": "관련·근거 있는 영역만, 상위 정량정보 보존",
+      "계획": [
+        "우선 추진과제",
+        "전략적 확장",
+        "차별화 과제"
+      ],
+      "추가_확인사항": "중대 gap 있을 때만"
+    }
+  },
+  "golden_pass_conditions": [
+    "must_preserve_themes 중 material theme가 근거 없이 사라지지 않는다.",
+    "퇴직연금 하나로 이슈가 축소되지 않는다.",
+    "경쟁사 사례는 구체적 기업/서비스/대상/특징을 근거가 있을 때만 제시한다.",
+    "정책 maturity를 원문보다 높이지 않는다.",
+    "Evidence→Asset Management Mechanism→Business Opportunity 연결이 존재한다.",
+    "Strategy는 upstream BO에 연결된다.",
+    "Action Plan은 WHAT+TARGET+METHOD 최소요건을 충족한다.",
+    "Final의 final_report_text는 <#주제> + □ 핵심 판단 / □ (현황) 영역별 / □ (계획) 과제별 / □ 추가 확인사항(조건부) 구조를 따른다.",
+    "Final은 내부 A-F JSON과 final_report_text를 함께 반환하며, 가시 본문에 내부 라벨이 없다."
+  ],
+  "golden_fail_conditions": [
+    "S06를 '퇴직연금 대응'으로만 요약",
+    "원문/검색결과에 없는 내부 조직·플랫폼·제휴를 당사 보유역량으로 단정",
+    "NOT_FOUND를 '당사는 해당 상품이 없다'로 표현",
+    "정책상 '논의/검토'를 '확정/시행'으로 승격",
+    "시장 성장 사실만으로 바로 신규상품 출시를 결론",
+    "대상·방식·목적이 없는 빈 검토를 계획으로 제시 (readiness에 맞는 구체적 '~하는 방안 검토'는 정상)",
+    "Final에서 09에 없던 신규전략 생성",
+    "풍부한 정량자료가 upstream에 있는데 Final에서 '시장 성장' 수준으로 일반화",
+    "final_report_text 누락 또는 A-F 6섹션을 그대로 가시 본문으로 출력"
+  ],
+  "scoring": {
+    "dimensions": [
+      {
+        "name": "source_fidelity",
+        "weight": 20
+      },
+      {
+        "name": "research_coverage",
+        "weight": 20
+      },
+      {
+        "name": "evidence_integrity",
+        "weight": 20
+      },
+      {
+        "name": "business_opportunity_quality",
+        "weight": 15
+      },
+      {
+        "name": "strategy_executability",
+        "weight": 15
+      },
+      {
+        "name": "final_report_quality",
+        "weight": 10
+      }
+    ],
+    "pass_threshold": 80,
+    "hard_fail_overrides_score": true
+  }
+}
