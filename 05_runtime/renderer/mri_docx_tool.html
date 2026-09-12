@@ -1,0 +1,474 @@
+<title>MRI 대응안 Word 변환기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@700&display=swap">
+<style>
+:root{
+  --paper:#EDEDE6;--surface:#FFFFFF;--surface-2:#F6F6F1;
+  --ink:#1C2320;--ink-2:#414B46;--muted:#6E7872;
+  --rule:#CFD0C6;--rule-soft:#E4E5DC;
+  --accent:#2C5E4C;--accent-soft:#E1ECE6;--accent-ink:#FFFFFF;
+  --warn:#8A5426;--warn-soft:#F4EADE;
+  --shadow:0 1px 2px rgba(28,35,32,.06),0 10px 28px -18px rgba(28,35,32,.3);
+  --f-display:"Noto Serif KR",'Nanum Myeongjo',Georgia,serif;
+  --f-body:"IBM Plex Sans KR",'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#101310;--surface:#191D19;--surface-2:#1F241F;
+  --ink:#E6EAE5;--ink-2:#BAC2BC;--muted:#89968F;
+  --rule:#2E362F;--rule-soft:#252C26;
+  --accent:#7FBFA4;--accent-soft:#182521;--accent-ink:#101310;
+  --warn:#D6A26A;--warn-soft:#2A2018;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 28px -18px rgba(0,0,0,.85);
+}}
+:root[data-theme="dark"]{
+  --paper:#101310;--surface:#191D19;--surface-2:#1F241F;
+  --ink:#E6EAE5;--ink-2:#BAC2BC;--muted:#89968F;
+  --rule:#2E362F;--rule-soft:#252C26;
+  --accent:#7FBFA4;--accent-soft:#182521;--accent-ink:#101310;
+  --warn:#D6A26A;--warn-soft:#2A2018;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 28px -18px rgba(0,0,0,.85);
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:18px;padding-block:0 60px}
+h1,h2{font-family:var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0}
+code{font-family:var(--f-mono);font-size:.87em}
+
+header.top{padding-block:34px 20px;border-bottom:2px solid var(--ink);display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.brand .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(24px,4vw,32px);line-height:1.2;margin-top:8px}
+.brand p{color:var(--ink-2);font-size:14px;margin-top:7px;max-width:56ch}
+.offline{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--rule);border-radius:2px;padding:7px 11px;background:var(--surface);line-height:1.6;white-space:nowrap}
+.offline b{color:var(--accent);font-weight:500}
+
+.panes{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;align-items:start}
+@media (max-width:900px){.panes{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0}
+.pane > h2{font-size:14px;font-family:var(--f-body);font-weight:600;padding:13px 16px;border-bottom:1px solid var(--rule-soft);display:flex;align-items:center;gap:9px}
+.pane > h2 .n{font-family:var(--f-mono);font-size:11px;color:var(--accent-ink);background:var(--accent);width:19px;height:19px;border-radius:2px;display:grid;place-items:center}
+.pane .inner{padding:14px 16px 16px}
+
+textarea{width:100%;min-height:270px;resize:vertical;font-family:var(--f-mono);font-size:12px;line-height:1.6;padding:11px 12px;border:1px solid var(--rule);border-radius:2px;background:var(--surface-2);color:var(--ink)}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.drop{margin-top:10px;border:1px dashed var(--rule);border-radius:2px;padding:12px;text-align:center;font-size:13px;color:var(--muted);background:var(--surface-2)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.drop label{color:var(--accent);text-decoration:underline;cursor:pointer;font-weight:500}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:13px}
+button{font-family:var(--f-body);font-size:13.5px;font-weight:600;padding:9px 15px;border-radius:2px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.ghost{background:var(--surface);color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);margin-left:auto}
+.chk input{accent-color:var(--accent);width:15px;height:15px}
+
+.msg{margin-top:11px;font-size:13px;padding:9px 12px;border-radius:2px;display:none}
+.msg.show{display:block}
+.msg.ok{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.msg.err{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+
+#preview{padding:18px 20px 22px;min-height:270px;max-height:560px;overflow:auto;background:var(--surface)}
+#preview .ph{color:var(--muted);font-size:13.5px}
+#preview .t{font-family:var(--f-display);font-weight:700;font-size:17px;border-bottom:1.5px solid var(--ink);padding-bottom:7px;margin-bottom:14px}
+#preview .h{font-weight:600;font-size:15px;margin-top:16px;margin-bottom:5px}
+#preview .l1{padding-left:16px;text-indent:-16px;margin-left:14px;font-size:14px;color:var(--ink-2)}
+#preview .l2{padding-left:16px;text-indent:-16px;margin-left:34px;font-size:13.6px;color:var(--ink-2)}
+#preview .l3{margin-left:50px;font-size:13.6px;color:var(--ink-2)}
+#preview table{border-collapse:collapse;margin-top:16px;font-size:12.5px;width:100%}
+#preview th,#preview td{border:1px solid var(--rule);padding:5px 9px;text-align:left;color:var(--ink-2)}
+#preview th{background:var(--surface-2);font-weight:600;font-family:var(--f-mono);font-size:11px}
+
+.guide{margin-top:26px;background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);padding:20px 22px 24px}
+.guide h2{font-size:17px;margin-bottom:14px}
+.steps{display:grid;gap:1px;background:var(--rule-soft);border:1px solid var(--rule-soft);margin-bottom:18px}
+.step{background:var(--surface);padding:12px 15px;display:grid;grid-template-columns:24px 1fr;gap:11px;align-items:baseline}
+.step .n{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.step .t{font-size:14px;color:var(--ink);font-weight:600}
+.step .t span{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:2px}
+.faq{display:grid;gap:0;font-size:13.5px}
+.faq > div{padding:9px 0;border-bottom:1px solid var(--rule-soft);display:grid;grid-template-columns:minmax(150px,230px) 1fr;gap:16px}
+.faq > div:last-child{border-bottom:0}
+.faq b{color:var(--ink);font-weight:600}
+.faq span{color:var(--ink-2)}
+@media (max-width:640px){.faq > div{grid-template-columns:1fr;gap:3px}}
+.framed{margin-top:16px;padding:11px 14px;border:1px solid var(--warn);background:var(--warn-soft);color:var(--warn);border-radius:2px;font-size:13.5px}
+.framed b{font-weight:600}
+footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);line-height:1.9}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <div class="eyebrow">MRI AI PoC</div>
+    <h1>MRI 대응안 Word 변환기</h1>
+    <p>AIR Studio가 만든 최종 대응안을 제출 양식 Word 문서로 바꿉니다. 붙여넣고 버튼 한 번이면 됩니다.</p>
+  </div>
+  <div class="offline">설치 불필요 · 인터넷 불필요<br><b>파일이 어디로도 전송되지 않습니다</b></div>
+</header>
+
+<div class="framed" id="framed" hidden>
+  이 페이지가 <b>다른 화면 안에 끼워진 상태</b>로 열려 있습니다. 보안 정책 때문에 파일 저장이 막힐 수 있습니다.
+  저장이 안 되면 <b>서식 그대로 복사</b>를 쓰시거나, 이 파일을 내려받아 더블클릭으로 여십시오.
+</div>
+
+<div class="panes">
+  <section class="pane">
+    <h2><span class="n">1</span>결과 JSON 붙여넣기</h2>
+    <div class="inner">
+      <textarea id="src" spellcheck="false" placeholder='AIR Studio 채팅창 맨 아래 코드블록의 { 부터 마지막 } 까지 통째로 붙여넣으세요.'></textarea>
+      <div class="drop" id="drop">
+        JSON 파일을 여기에 끌어다 놓거나
+        <label for="file">파일 선택</label>
+        <input type="file" id="file" accept=".json,.txt,application/json">
+      </div>
+      <div class="controls">
+        <button id="go">Word 파일로 저장</button>
+        <button id="copy" class="ghost">서식 그대로 복사</button>
+        <label class="chk"><input type="checkbox" id="trace"> 추적정보 포함</label>
+      </div>
+      <div class="msg" id="msg"></div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <h2><span class="n">2</span>미리보기</h2>
+    <div id="preview"><p class="ph">왼쪽에 JSON을 붙여넣으면 문서 모양이 여기에 나타납니다.</p></div>
+  </section>
+</div>
+
+<section class="guide">
+  <h2>쓰는 순서</h2>
+  <div class="steps">
+    <div class="step"><span class="n">01</span><span class="t">AIR Studio 결과를 복사<span>Agent 2 실행 후 채팅창 맨 아래 코드블록의 <code>{</code> 부터 마지막 <code>}</code> 까지 전체</span></span></div>
+    <div class="step"><span class="n">02</span><span class="t">왼쪽 칸에 붙여넣기<span>붙여넣는 즉시 오른쪽에 문서 모양이 나옵니다. 내용이 맞는지 먼저 확인하세요</span></span></div>
+    <div class="step"><span class="n">03</span><span class="t">Word 파일로 저장<span>다운로드 폴더에 <code>.docx</code> 가 생깁니다. 열어서 다듬고 제출하면 끝</span></span></div>
+  </div>
+
+  <h2 style="font-size:15px;margin-bottom:10px">알아두실 것</h2>
+  <div class="faq">
+    <div><b>서식 그대로 복사 버튼</b><span>파일 저장이 막힌 PC를 위한 대안입니다. 누른 뒤 한글이나 Word에 바로 붙여넣으면 굵기와 들여쓰기가 유지됩니다.</span></div>
+    <div><b>추적정보 포함</b><span>최종 준비도, 사용된 근거·전략 개수, 원문 핵심 주제 중 반영된 것과 못 찾은 것을 마지막 장에 표로 붙입니다. 내부 검수·시연용이며 제출본에는 넣지 않는 것이 기본입니다.</span></div>
+    <div><b>한글(HWP)로 내야 할 때</b><span>Word 파일을 만든 뒤 한글에서 열어 HWP로 저장하세요. HWP를 직접 만드는 것보다 안정적입니다.</span></div>
+    <div><b>이 페이지를 보관하려면</b><span>브라우저에서 <code>Ctrl+S</code> 로 저장해두면 인터넷 없이도 언제든 더블클릭해서 씁니다.</span></div>
+    <div><b>JSON 일부만 복사한 경우</b><span>"본문을 찾지 못했습니다" 오류가 납니다. 코드블록 안쪽을 처음부터 끝까지 다시 복사하세요.</span></div>
+  </div>
+</section>
+
+<footer>
+  입력한 내용은 이 브라우저 안에서만 처리되며 외부로 전송되지 않습니다.<br>
+  동일한 변환 규칙의 명령줄 버전: 05_runtime/renderer/render_mri_docx.js
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id)};
+  var src=$("src"), msg=$("msg"), preview=$("preview"), drop=$("drop");
+  var parsed=null;
+
+  function say(text,kind){ msg.textContent=text; msg.className="msg show "+(kind||"ok"); }
+  function clearMsg(){ msg.className="msg"; }
+
+  /* ---------- JSON 해석 ---------- */
+  function extract(raw){
+    var t=String(raw).trim();
+    if(!t) throw new Error("내용이 비어 있습니다.");
+    var i=t.indexOf("{"), j=t.lastIndexOf("}");
+    if(i<0||j<i) throw new Error("JSON 형식이 아닙니다. { 로 시작해 } 로 끝나는 부분을 복사하세요.");
+    var obj;
+    try{ obj=JSON.parse(t.slice(i,j+1)); }
+    catch(e){ throw new Error("JSON을 읽지 못했습니다. 앞뒤 설명 문장이 섞이지 않았는지 확인하세요."); }
+    var r=obj;
+    if(!r.final_report_text && !r.final_report){
+      r=obj.output||obj.result||obj.data||obj;
+    }
+    if(!r.final_report_text && !r.final_report){
+      throw new Error("본문을 찾지 못했습니다. 10번 노드의 출력 JSON이 맞는지 확인하세요.");
+    }
+    return r;
+  }
+
+  var DOMAIN={industry_customer:"산업·고객",policy_regulation:"정책·제도",
+    financial_competitors:"금융업권·경쟁사",asset_management_fund_market:"자산운용·펀드시장",
+    company_status:"당사 현황"};
+
+  function textFromStructure(r){
+    var f=r.final_report||{}, L=[];
+    var title=[r.issue_no,r.issue_title].filter(Boolean).join(" ");
+    L.push("<"+(title||r.issue_id||"MRI 대응안")+">","");
+    if(f.A_core_judgment){ L.push("□ 핵심 판단"," ○ "+f.A_core_judgment,""); }
+    (f.B_current_status_and_market_analysis||[]).forEach(function(b){
+      L.push(("□ (현황) "+(DOMAIN[b.domain]||b.domain||"")+" "+(b.headline||"")).trim());
+      (b.points||[]).forEach(function(p){
+        if(p.main_point) L.push(" ○ "+p.main_point);
+        (p.details||[]).forEach(function(d){ L.push("  - "+d); });
+      });
+      L.push("");
+    });
+    var by={};
+    (f.E_action_plan||[]).forEach(function(a){
+      var k=a.visible_block||"우선 추진과제"; (by[k]=by[k]||[]).push(a);
+    });
+    Object.keys(by).forEach(function(k){
+      L.push("□ (계획) "+k);
+      by[k].forEach(function(a){
+        if(a.action) L.push(" ○ "+a.action);
+        if(a.dependency) L.push("  - "+a.dependency);
+      });
+      L.push("");
+    });
+    if((f.F_additional_checks||[]).length){
+      L.push("□ 추가 확인사항");
+      f.F_additional_checks.forEach(function(c){
+        L.push(" ○ "+(typeof c==="string"?c:(c.item||c.statement||JSON.stringify(c))));
+      });
+    }
+    return L.join("\n");
+  }
+
+  function bodyText(r){
+    var t=r.final_report_text&&String(r.final_report_text).trim();
+    return t?String(r.final_report_text):textFromStructure(r);
+  }
+
+  /* 한 줄을 종류로 분류 */
+  function classify(line){
+    var t=line.trim();
+    if(!t) return null;
+    if(/^<.*>$/.test(t)) return {k:"t",s:t};
+    if(t.charAt(0)==="□") return {k:"h",s:t};
+    if(t.charAt(0)==="○") return {k:"l1",s:t};
+    if(/^[-–·]/.test(t)) return {k:"l2",s:t};
+    return {k:"l3",s:t};
+  }
+  function lines(text){
+    var out=[], titleDone=false;
+    String(text).replace(/\r\n?/g,"\n").split("\n").forEach(function(raw){
+      var c=classify(raw); if(!c) return;
+      if(c.k==="t"){ if(titleDone){ c.k="l3"; } else { titleDone=true; } }
+      out.push(c);
+    });
+    return out;
+  }
+
+  function traceRows(r){
+    var tr=r.traceability||{};
+    var n=function(x){ return Array.isArray(x)?x.length:0; };
+    var l=function(x){ return (Array.isArray(x)&&x.length)?x.join(", "):"-"; };
+    return [["항목","값"],
+      ["이슈",[r.issue_id,r.issue_title].filter(Boolean).join(" ")||"-"],
+      ["최종 준비도",r.final_readiness||"-"],
+      ["사용 근거 수",String(n(tr.evidence_ids_used))],
+      ["사용 사업기회 수",String(n(tr.bo_ids_used))],
+      ["사용 전략 수",String(n(tr.strategy_ids_used))],
+      ["원문 주제 — 반영",l(tr.must_preserve_themes_covered)],
+      ["원문 주제 — 미확보",l(tr.must_preserve_themes_unsupported)]];
+  }
+
+  /* ---------- 미리보기 ---------- */
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]}); }
+  function render(){
+    clearMsg();
+    var raw=src.value;
+    if(!raw.trim()){ parsed=null; preview.innerHTML='<p class="ph">왼쪽에 JSON을 붙여넣으면 문서 모양이 여기에 나타납니다.</p>'; return; }
+    try{ parsed=extract(raw); }
+    catch(e){ parsed=null; preview.innerHTML='<p class="ph">'+esc(e.message)+'</p>'; return; }
+
+    var ls=lines(bodyText(parsed)), html="";
+    ls.forEach(function(c){
+      var cls={t:"t",h:"h",l1:"l1",l2:"l2",l3:"l3"}[c.k];
+      html+='<div class="'+cls+'">'+esc(c.s)+"</div>";
+    });
+    if($("trace").checked){
+      var rows=traceRows(parsed);
+      html+="<table><tr><th>"+esc(rows[0][0])+"</th><th>"+esc(rows[0][1])+"</th></tr>";
+      rows.slice(1).forEach(function(r){ html+="<tr><td>"+esc(r[0])+"</td><td>"+esc(r[1])+"</td></tr>"; });
+      html+="</table>";
+    }
+    preview.innerHTML=html;
+    if(!parsed.final_report_text){
+      say("본문(final_report_text)이 없어 A–F 구조에서 복원했습니다. 문장을 더 다듬어야 할 수 있습니다.","err");
+    }
+  }
+
+  /* ---------- ZIP (저장 방식, 무압축) ---------- */
+  var CRC=(function(){
+    var t=new Int32Array(256);
+    for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c; }
+    return t;
+  })();
+  function crc32(buf){
+    var c=-1;
+    for(var i=0;i<buf.length;i++) c=CRC[(c^buf[i])&0xFF]^(c>>>8);
+    return (c^-1)>>>0;
+  }
+  function utf8(s){ return new TextEncoder().encode(s); }
+  function nums(arr){ return new Uint8Array(arr); }
+  function u16(v){ return [v&0xFF,(v>>>8)&0xFF]; }
+  function u32(v){ return [v&0xFF,(v>>>8)&0xFF,(v>>>16)&0xFF,(v>>>24)&0xFF]; }
+
+  function zip(files){
+    var parts=[], central=[], offset=0;
+    files.forEach(function(f){
+      var name=utf8(f.name), data=utf8(f.data), crc=crc32(data);
+      var lh=[].concat([0x50,0x4B,0x03,0x04],u16(20),u16(0x0800),u16(0),u16(0),u16(0),
+        u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+      parts.push(nums(lh),name,data);
+      central.push({name:name,crc:crc,len:data.length,off:offset});
+      offset+=lh.length+name.length+data.length;
+    });
+    var cd=[], cdLen=0;
+    central.forEach(function(c){
+      var h=[].concat([0x50,0x4B,0x01,0x02],u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),
+        u32(c.crc),u32(c.len),u32(c.len),u16(c.name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.off));
+      cd.push(nums(h),c.name); cdLen+=h.length+c.name.length;
+    });
+    var end=nums([].concat([0x50,0x4B,0x05,0x06],u16(0),u16(0),
+      u16(central.length),u16(central.length),u32(cdLen),u32(offset),u16(0)));
+    return new Blob(parts.concat(cd,[end]),{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+  }
+
+  /* ---------- docx XML ---------- */
+  var F='<w:rFonts w:ascii="맑은 고딕" w:eastAsia="맑은 고딕" w:hAnsi="맑은 고딕"/>';
+  function xe(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]}); }
+  function run(text,opts){
+    opts=opts||{};
+    return '<w:r><w:rPr>'+F+(opts.b?'<w:b/>':'')+'<w:sz w:val="'+(opts.sz||21)+'"/>'
+      +'<w:szCs w:val="'+(opts.sz||21)+'"/>'+(opts.color?'<w:color w:val="'+opts.color+'"/>':'')
+      +'</w:rPr><w:t xml:space="preserve">'+xe(text)+'</w:t></w:r>';
+  }
+  function para(text,o){
+    o=o||{};
+    /* w:pPr 자식 요소 순서는 스키마로 강제된다: pageBreakBefore -> pBdr -> spacing -> ind */
+    var pr='<w:pPr>';
+    if(o.pageBreak) pr+='<w:pageBreakBefore/>';
+    if(o.border) pr+='<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="6" w:color="000000"/></w:pBdr>';
+    pr+='<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after||40)+'"/>';
+    if(o.left!=null) pr+='<w:ind w:left="'+o.left+'"'+(o.hanging?' w:hanging="'+o.hanging+'"':'')+'/>';
+    pr+='</w:pPr>';
+    return '<w:p>'+pr+(text===""?"":run(text,o))+'</w:p>';
+  }
+  function tcell(text,w,head){
+    return '<w:tc><w:tcPr><w:tcW w:w="'+w+'" w:type="dxa"/>'
+      +(head?'<w:shd w:val="clear" w:color="auto" w:fill="EFEFEF"/>':'')
+      +'</w:tcPr>'+para(text,{b:!!head,sz:19,after:0})+'</w:tc>';
+  }
+  function table(rows){
+    var W=[2400,6600];
+    var borders='<w:tblBorders>'+["top","left","bottom","right","insideH","insideV"].map(function(s){
+      return '<w:'+s+' w:val="single" w:sz="4" w:color="999999"/>';}).join("")+'</w:tblBorders>';
+    var body=rows.map(function(r,i){
+      return '<w:tr>'+tcell(r[0],W[0],i===0)+tcell(r[1],W[1],i===0)+'</w:tr>';
+    }).join("");
+    return '<w:tbl><w:tblPr><w:tblW w:w="9000" w:type="dxa"/>'+borders+'</w:tblPr>'
+      +'<w:tblGrid><w:gridCol w:w="'+W[0]+'"/><w:gridCol w:w="'+W[1]+'"/></w:tblGrid>'+body+'</w:tbl>';
+  }
+
+  function buildDocx(r,withTrace){
+    var xml="";
+    lines(bodyText(r)).forEach(function(c){
+      if(c.k==="t")      xml+=para(c.s,{b:true,sz:26,after:260,border:true});
+      else if(c.k==="h") xml+=para(c.s,{b:true,sz:22,before:240,after:80});
+      else if(c.k==="l1")xml+=para(c.s,{left:400,hanging:200});
+      else if(c.k==="l2")xml+=para(c.s,{left:800,hanging:200});
+      else               xml+=para(c.s,{left:800});
+    });
+    if(withTrace){
+      xml+=para("[부록] 추적정보",{b:true,sz:22,after:140,pageBreak:true});
+      xml+=para("내부 검수용이며 제출본에는 포함하지 않는다.",{sz:19,after:160,color:"666666"});
+      xml+=table(traceRows(r));
+    }
+    var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      +'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
+      +xml+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
+      +'<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="720" w:footer="720" w:gutter="0"/>'
+      +'</w:sectPr></w:body></w:document>';
+
+    return zip([
+      {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        +'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        +'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        +'<Default Extension="xml" ContentType="application/xml"/>'
+        +'<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        +'</Types>'},
+      {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        +'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+        +'</Relationships>'},
+      {name:"word/_rels/document.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        +'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>'},
+      {name:"word/document.xml",data:doc}
+    ]);
+  }
+
+  /* ---------- 동작 ---------- */
+  $("go").addEventListener("click",function(){
+    render();
+    if(!parsed){ say("먼저 올바른 JSON을 붙여넣으세요.","err"); return; }
+    try{
+      var blob=buildDocx(parsed,$("trace").checked);
+      var name="MRI_"+String(parsed.issue_id||"response").replace(/[^\w.-]/g,"_")+".docx";
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement("a");
+      a.href=url; a.download=name; document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+      say(name+" 저장을 시작했습니다. 다운로드 폴더를 확인하세요.","ok");
+    }catch(e){
+      say("변환 중 오류: "+e.message+" — 저장이 막힌 환경이라면 '서식 그대로 복사'를 쓰세요.","err");
+    }
+  });
+
+  $("copy").addEventListener("click",function(){
+    render();
+    if(!parsed){ say("먼저 올바른 JSON을 붙여넣으세요.","err"); return; }
+    var html='<div style="font-family:맑은 고딕">'+preview.innerHTML+"</div>";
+    var text=lines(bodyText(parsed)).map(function(c){return c.s}).join("\n");
+    var done=function(){ say("복사했습니다. 한글이나 Word에 붙여넣으세요.","ok"); };
+    if(navigator.clipboard&&window.ClipboardItem){
+      navigator.clipboard.write([new ClipboardItem({
+        "text/html":new Blob([html],{type:"text/html"}),
+        "text/plain":new Blob([text],{type:"text/plain"})
+      })]).then(done,fallback);
+    } else { fallback(); }
+    function fallback(){
+      var d=document.createElement("div");
+      d.innerHTML=html;
+      d.setAttribute("style","position:fixed;left:-9999px;top:0;white-space:pre-wrap");
+      document.body.appendChild(d);
+      var rg=document.createRange(); rg.selectNodeContents(d);
+      var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+      var ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+      sel.removeAllRanges(); document.body.removeChild(d);
+      if(ok) done(); else say("복사가 차단되었습니다. 미리보기 영역을 직접 드래그해 복사하세요.","err");
+    }
+  });
+
+  try{ if(window.self!==window.top) $("framed").hidden=false; }catch(e){ $("framed").hidden=false; }
+
+  src.addEventListener("input",render);
+  $("trace").addEventListener("change",render);
+
+  function readFile(f){
+    var rd=new FileReader();
+    rd.onload=function(){ src.value=rd.result; render(); };
+    rd.onerror=function(){ say("파일을 읽지 못했습니다.","err"); };
+    rd.readAsText(f,"utf-8");
+  }
+  $("file").addEventListener("change",function(e){ if(e.target.files[0]) readFile(e.target.files[0]); });
+  ["dragenter","dragover"].forEach(function(ev){
+    drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave","drop"].forEach(function(ev){
+    drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop",function(e){
+    var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(f) readFile(f);
+  });
+})();
+</script>
