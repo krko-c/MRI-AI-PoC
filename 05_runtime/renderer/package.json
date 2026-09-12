@@ -1,0 +1,11 @@
+{
+  "name": "mri-docx-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MRI 최종 대응안 JSON을 제출 양식 Word 문서로 변환",
+  "main": "render_mri_docx.js",
+  "scripts": {
+    "sample": "node render_mri_docx.js sample/sample_output_10.json -o sample/sample_output.docx"
+  },
+  "dependencies": { "docx": "^9.0.0" }
+}
