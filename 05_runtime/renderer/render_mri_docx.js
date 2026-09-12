@@ -5,7 +5,10 @@
  * 입력 : 10 ISSUE FINAL MRI RESPONSE 노드의 출력 JSON
  * 출력 : 기존 MRI 제출 양식(현황 / 계획)의 .docx
  *
- *   node render_mri_docx.js <input.json> [-o output.docx] [--trace]
+ *   node render_mri_docx.js <input.json> [...] [-o output.docx] [-t 제목] [--trace]
+ *
+ * JSON 을 여러 개 주면 이슈별 섹션으로 나뉜 문서 하나를 만든다.
+ *   node render_mri_docx.js S06.json S03.json -t "2026-4호 MRI 대응안" -o 대응안.docx
  *
  * --trace 를 주면 추적정보(근거·전략 ID, 원문 주제 회수 현황)를 부록으로 덧붙인다.
  * 제출본에는 넣지 않는 것이 기본이므로 기본값은 미포함이다.
@@ -22,12 +25,13 @@ const SZ = { title: 26, head: 22, body: 21, small: 19 }; // half-points
 
 // ---------- 입력 ----------
 function parseArgs(argv) {
-  const a = { input: null, out: null, trace: false };
+  const a = { inputs: [], out: null, title: null, trace: false };
   for (let i = 2; i < argv.length; i++) {
     const v = argv[i];
     if (v === "-o" || v === "--out") a.out = argv[++i];
+    else if (v === "-t" || v === "--title") a.title = argv[++i];
     else if (v === "--trace") a.trace = true;
-    else if (!a.input) a.input = v;
+    else a.inputs.push(v);
   }
   return a;
 }
@@ -89,7 +93,8 @@ function textFromStructure(r) {
 }
 
 /** □ / ○ / - 계층 텍스트를 Word 문단으로 변환 */
-function bodyParagraphs(text) {
+function bodyParagraphs(text, opts) {
+  opts = opts || {};
   const out = [];
   const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
   let titleDone = false;
@@ -103,6 +108,7 @@ function bodyParagraphs(text) {
     // <#6 주제명>
     if (!titleDone && /^<.*>$/.test(t)) {
       out.push(new Paragraph({
+        pageBreakBefore: !!opts.pageBreakBefore,
         spacing: { after: 260 },
         border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: "000000", space: 6 } },
         children: [new TextRun({ text: t, bold: true, font: FONT, size: SZ.title })],
@@ -148,7 +154,43 @@ function cell(text, opts = {}) {
   });
 }
 
-function traceAppendix(r) {
+/**
+ * 기본 파일명. 한글을 쓰지 않는다 — 브라우저·OS에 따라 비ASCII 파일명이
+ * 통째로 버려지면서 확장자까지 사라지는 경우가 있다.
+ */
+function defaultName(reports) {
+  const ids = reports.map((r) => String(r.issue_id || "").replace(/[^\w.-]/g, "")).filter(Boolean);
+  if (ids.length && ids.length <= 4) return `MRI_${ids.join("_")}.docx`;
+  if (reports.length > 1) return `MRI_${reports.length}issues.docx`;
+  return "MRI_response.docx";
+}
+
+function issueLabel(r) {
+  return [r.issue_no, r.issue_title].filter(Boolean).join(" ") || r.issue_id || "이슈";
+}
+
+/** 2건 이상일 때만 붙이는 표지 */
+function coverPage(reports, title) {
+  const out = [new Paragraph({
+    spacing: { after: 300 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: "000000", space: 8 } },
+    children: [new TextRun({ text: title || "MRI 대응안", bold: true, font: FONT, size: 30 })],
+  })];
+  out.push(new Paragraph({
+    spacing: { before: 120, after: 100 },
+    children: [new TextRun({ text: "□ 대상 이슈", bold: true, font: FONT, size: SZ.head })],
+  }));
+  reports.forEach((r) => {
+    out.push(new Paragraph({
+      spacing: { after: 50 }, indent: { left: 400, hanging: 200 },
+      children: [new TextRun({ text: "○ " + issueLabel(r), font: FONT, size: SZ.body })],
+    }));
+  });
+  return out;
+}
+
+function traceAppendix(r, opts) {
+  opts = opts || {};
   const tr = r.traceability || {};
   const n = (x) => (Array.isArray(x) ? x.length : 0);
   const list = (x) => (Array.isArray(x) && x.length ? x.join(", ") : "-");
@@ -165,42 +207,62 @@ function traceAppendix(r) {
     ["원문 주제 — 미확보", list(tr.must_preserve_themes_unsupported)],
   ];
 
-  return [
-    new Paragraph({ children: [], pageBreakBefore: true }),
-    new Paragraph({
+  const head = [];
+  if (opts.first) {
+    head.push(new Paragraph({ children: [], pageBreakBefore: true }));
+    head.push(new Paragraph({
       spacing: { after: 140 },
       children: [new TextRun({ text: "[부록] 추적정보", bold: true, font: FONT, size: SZ.head })],
-    }),
-    new Paragraph({
+    }));
+    head.push(new Paragraph({
       spacing: { after: 160 },
       children: [new TextRun({ text: "내부 검수용이며 제출본에는 포함하지 않는다.", font: FONT, size: SZ.small, color: "666666" })],
-    }),
+    }));
+  }
+  if (opts.label) {
+    head.push(new Paragraph({
+      spacing: { before: opts.first ? 0 : 240, after: 90 },
+      children: [new TextRun({ text: "○ " + opts.label, bold: true, font: FONT, size: SZ.body })],
+    }));
+  }
+  return head.concat([
     new Table({
       columnWidths: W,
       width: { size: W[0] + W[1], type: WidthType.DXA },
       rows: rows.map((cells, i) =>
         new TableRow({ children: cells.map((c, j) => cell(c, { w: W[j], head: i === 0 })) })),
     }),
-  ];
+  ]);
 }
 
 // ---------- 실행 ----------
 function main() {
   const args = parseArgs(process.argv);
-  if (!args.input) {
-    console.error("사용법: node render_mri_docx.js <input.json> [-o output.docx] [--trace]");
+  if (!args.inputs.length) {
+    console.error("사용법: node render_mri_docx.js <input.json> [...] [-o out.docx] [-t 제목] [--trace]");
     process.exit(1);
   }
-  const r = loadReport(args.input);
-  const text = r.final_report_text && String(r.final_report_text).trim()
-    ? r.final_report_text
-    : textFromStructure(r);
-  if (!r.final_report_text) {
-    console.warn("주의: final_report_text 가 없어 A-F 구조에서 본문을 복원했습니다. 문장 다듬기가 필요할 수 있습니다.");
-  }
+  const reports = args.inputs.map(loadReport);
+  const multi = reports.length > 1;
 
-  const children = bodyParagraphs(text);
-  if (args.trace) children.push(...traceAppendix(r));
+  let children = [];
+  if (multi) children = children.concat(coverPage(reports, args.title));
+
+  reports.forEach((r, i) => {
+    const text = r.final_report_text && String(r.final_report_text).trim()
+      ? r.final_report_text
+      : textFromStructure(r);
+    if (!r.final_report_text) {
+      console.warn(`주의: ${issueLabel(r)} 에 final_report_text 가 없어 A-F 구조에서 복원했습니다.`);
+    }
+    children = children.concat(bodyParagraphs(text, { pageBreakBefore: multi || i > 0 }));
+  });
+
+  if (args.trace) {
+    reports.forEach((r, i) => {
+      children = children.concat(traceAppendix(r, { first: i === 0, label: multi ? issueLabel(r) : null }));
+    });
+  }
 
   const doc = new Document({
     styles: { default: { document: { run: { font: FONT, size: SZ.body } } } },
@@ -210,13 +272,11 @@ function main() {
     }],
   });
 
-  const out = args.out || path.join(
-    path.dirname(args.input),
-    `MRI_${(r.issue_id || "response").replace(/[^\w.-]/g, "_")}.docx`);
+  const out = args.out || path.join(path.dirname(args.inputs[0]), defaultName(reports));
 
   Packer.toBuffer(doc).then((buf) => {
     fs.writeFileSync(out, buf);
-    console.log(`생성: ${out}  (문단 ${children.length}개${args.trace ? " · 추적정보 포함" : ""})`);
+    console.log(`생성: ${out}  (이슈 ${reports.length}건 · 문단 ${children.length}개${args.trace ? " · 추적정보 포함" : ""})`);
   });
 }
 

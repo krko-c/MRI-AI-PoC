@@ -51,7 +51,8 @@ h1{font-size:clamp(24px,4vw,32px);line-height:1.2;margin-top:8px}
 .pane .inner{padding:14px 16px 16px}
 
 textarea{width:100%;min-height:270px;resize:vertical;font-family:var(--f-mono);font-size:12px;line-height:1.6;padding:11px 12px;border:1px solid var(--rule);border-radius:2px;background:var(--surface-2);color:var(--ink)}
-textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea:focus,input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
+input[type=text]{width:100%;margin-top:10px;padding:9px 11px;border:1px solid var(--rule);border-radius:2px;background:var(--surface-2);color:var(--ink);font-family:var(--f-body);font-size:13.5px}
 .drop{margin-top:10px;border:1px dashed var(--rule);border-radius:2px;padding:12px;text-align:center;font-size:13px;color:var(--muted);background:var(--surface-2)}
 .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
 .drop label{color:var(--accent);text-decoration:underline;cursor:pointer;font-weight:500}
@@ -72,6 +73,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 #preview{padding:18px 20px 22px;min-height:270px;max-height:560px;overflow:auto;background:var(--surface)}
 #preview .ph{color:var(--muted);font-size:13.5px}
+#preview .sep{border-top:1px dashed var(--rule);margin:22px 0 4px;padding-top:14px;font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.1em}
+#preview .cover{font-family:var(--f-display);font-weight:700;font-size:19px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:12px}
 #preview .t{font-family:var(--f-display);font-weight:700;font-size:17px;border-bottom:1.5px solid var(--ink);padding-bottom:7px;margin-bottom:14px}
 #preview .h{font-weight:600;font-size:15px;margin-top:16px;margin-bottom:5px}
 #preview .l1{padding-left:16px;text-indent:-16px;margin-left:14px;font-size:14px;color:var(--ink-2)}
@@ -118,12 +121,15 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
   <section class="pane">
     <h2><span class="n">1</span>결과 JSON 붙여넣기</h2>
     <div class="inner">
-      <textarea id="src" spellcheck="false" placeholder='AIR Studio 채팅창 맨 아래 코드블록의 { 부터 마지막 } 까지 통째로 붙여넣으세요.'></textarea>
+      <textarea id="src" spellcheck="false" placeholder='AIR Studio 채팅창 맨 아래 코드블록의 { 부터 마지막 } 까지 통째로 붙여넣으세요.
+
+여러 이슈를 합치려면 결과를 이어서 붙여넣으면 됩니다. 이슈별 섹션으로 나뉜 문서 하나가 만들어집니다.'></textarea>
       <div class="drop" id="drop">
-        JSON 파일을 여기에 끌어다 놓거나
+        JSON 파일을 여기에 끌어다 놓거나 (여러 개 가능)
         <label for="file">파일 선택</label>
-        <input type="file" id="file" accept=".json,.txt,application/json">
+        <input type="file" id="file" accept=".json,.txt,application/json" multiple>
       </div>
+      <input id="title" type="text" placeholder="문서 제목 (선택) — 2건 이상일 때 표지에 들어갑니다">
       <div class="controls">
         <button id="go">Word 파일로 저장</button>
         <button id="copy" class="ghost">서식 그대로 복사</button>
@@ -149,6 +155,7 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
 
   <h2 style="font-size:15px;margin-bottom:10px">알아두실 것</h2>
   <div class="faq">
+    <div><b>여러 이슈를 한 문서로</b><span>결과 JSON을 이어서 붙여넣거나 파일 여러 개를 끌어다 놓으면, 표지와 이슈별 섹션으로 나뉜 문서 하나가 만들어집니다. 이슈마다 새 페이지에서 시작합니다.</span></div>
     <div><b>서식 그대로 복사 버튼</b><span>파일 저장이 막힌 PC를 위한 대안입니다. 누른 뒤 한글이나 Word에 바로 붙여넣으면 굵기와 들여쓰기가 유지됩니다.</span></div>
     <div><b>추적정보 포함</b><span>최종 준비도, 사용된 근거·전략 개수, 원문 핵심 주제 중 반영된 것과 못 찾은 것을 마지막 장에 표로 붙입니다. 내부 검수·시연용이며 제출본에는 넣지 않는 것이 기본입니다.</span></div>
     <div><b>한글(HWP)로 내야 할 때</b><span>Word 파일을 만든 뒤 한글에서 열어 HWP로 저장하세요. HWP를 직접 만드는 것보다 안정적입니다.</span></div>
@@ -168,12 +175,59 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
   "use strict";
   var $=function(id){return document.getElementById(id)};
   var src=$("src"), msg=$("msg"), preview=$("preview"), drop=$("drop");
-  var parsed=null;
+  var parsed=null;   /* 리포트 배열 */
 
   function say(text,kind){ msg.textContent=text; msg.className="msg show "+(kind||"ok"); }
   function clearMsg(){ msg.className="msg"; }
 
   /* ---------- JSON 해석 ---------- */
+  /* 이어붙인 여러 JSON 객체를 중괄호 균형으로 분리 (문자열 안 중괄호 무시) */
+  function splitObjects(text){
+    var out=[], i=0, n=text.length;
+    while(i<n){
+      var start=text.indexOf("{",i);
+      if(start<0) break;
+      var depth=0, inStr=false, esc=false, j=start, done=false;
+      for(; j<n; j++){
+        var c=text.charAt(j);
+        if(esc){ esc=false; continue; }
+        if(c==="\\"){ if(inStr) esc=true; continue; }
+        if(c==='"'){ inStr=!inStr; continue; }
+        if(inStr) continue;
+        if(c==="{") depth++;
+        else if(c==="}"){ depth--; if(depth===0){ j++; done=true; break; } }
+      }
+      if(!done) break;
+      out.push(text.slice(start,j));
+      i=j;
+    }
+    return out;
+  }
+
+  function unwrap(obj){
+    if(obj && (obj.final_report_text || obj.final_report)) return obj;
+    var c=obj && (obj.output||obj.result||obj.data);
+    if(c && (c.final_report_text || c.final_report)) return c;
+    return null;
+  }
+
+  function extractAll(raw){
+    var t=String(raw).trim();
+    if(!t) throw new Error("내용이 비어 있습니다.");
+    var blocks=splitObjects(t);
+    if(!blocks.length) throw new Error("JSON 형식이 아닙니다. { 로 시작해 } 로 끝나는 부분을 복사하세요.");
+    var reports=[], bad=0;
+    blocks.forEach(function(b){
+      var o; try{ o=JSON.parse(b); }catch(e){ bad++; return; }
+      var r=unwrap(o); if(r) reports.push(r); else bad++;
+    });
+    if(!reports.length){
+      throw new Error(bad?"본문을 찾지 못했습니다. 10번 노드의 출력 JSON이 맞는지, 코드블록 전체를 복사했는지 확인하세요."
+                         :"본문을 찾지 못했습니다.");
+    }
+    return { reports: reports, skipped: bad };
+  }
+
   function extract(raw){
     var t=String(raw).trim();
     if(!t) throw new Error("내용이 비어 있습니다.");
@@ -255,6 +309,20 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
     return out;
   }
 
+  /* 기본 파일명에 한글을 쓰지 않는다 — 비ASCII 파일명이 버려지면서
+     확장자까지 사라져 파일이 열리지 않는 브라우저가 있다. */
+  function defaultName(reports){
+    var ids=reports.map(function(r){ return String(r.issue_id||"").replace(/[^\w.-]/g,""); })
+                   .filter(function(x){ return x; });
+    if(ids.length && ids.length<=4) return "MRI_"+ids.join("_")+".docx";
+    if(reports.length>1) return "MRI_"+reports.length+"issues.docx";
+    return "MRI_response.docx";
+  }
+
+  function label(r){
+    return [r.issue_no,r.issue_title].filter(Boolean).join(" ")||r.issue_id||"이슈";
+  }
+
   function traceRows(r){
     var tr=r.traceability||{};
     var n=function(x){ return Array.isArray(x)?x.length:0; };
@@ -275,24 +343,40 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
     clearMsg();
     var raw=src.value;
     if(!raw.trim()){ parsed=null; preview.innerHTML='<p class="ph">왼쪽에 JSON을 붙여넣으면 문서 모양이 여기에 나타납니다.</p>'; return; }
-    try{ parsed=extract(raw); }
+    var res;
+    try{ res=extractAll(raw); }
     catch(e){ parsed=null; preview.innerHTML='<p class="ph">'+esc(e.message)+'</p>'; return; }
+    parsed=res.reports;
+    var multi=parsed.length>1, html="";
 
-    var ls=lines(bodyText(parsed)), html="";
-    ls.forEach(function(c){
-      var cls={t:"t",h:"h",l1:"l1",l2:"l2",l3:"l3"}[c.k];
-      html+='<div class="'+cls+'">'+esc(c.s)+"</div>";
+    if(multi){
+      html+='<div class="cover">'+esc($("title").value.trim()||"MRI 대응안")+"</div>";
+      html+='<div class="h">□ 대상 이슈</div>';
+      parsed.forEach(function(r){ html+='<div class="l1">○ '+esc(label(r))+"</div>"; });
+    }
+    parsed.forEach(function(r,i){
+      if(multi) html+='<div class="sep">— '+esc(label(r))+" —</div>";
+      lines(bodyText(r)).forEach(function(c){
+        html+='<div class="'+{t:"t",h:"h",l1:"l1",l2:"l2",l3:"l3"}[c.k]+'">'+esc(c.s)+"</div>";
+      });
     });
     if($("trace").checked){
-      var rows=traceRows(parsed);
-      html+="<table><tr><th>"+esc(rows[0][0])+"</th><th>"+esc(rows[0][1])+"</th></tr>";
-      rows.slice(1).forEach(function(r){ html+="<tr><td>"+esc(r[0])+"</td><td>"+esc(r[1])+"</td></tr>"; });
-      html+="</table>";
+      parsed.forEach(function(r){
+        if(multi) html+='<div class="sep">추적정보 — '+esc(label(r))+"</div>";
+        var rows=traceRows(r);
+        html+="<table><tr><th>"+esc(rows[0][0])+"</th><th>"+esc(rows[0][1])+"</th></tr>";
+        rows.slice(1).forEach(function(x){ html+="<tr><td>"+esc(x[0])+"</td><td>"+esc(x[1])+"</td></tr>"; });
+        html+="</table>";
+      });
     }
     preview.innerHTML=html;
-    if(!parsed.final_report_text){
-      say("본문(final_report_text)이 없어 A–F 구조에서 복원했습니다. 문장을 더 다듬어야 할 수 있습니다.","err");
-    }
+
+    var notes=[];
+    if(multi) notes.push(parsed.length+"건을 하나의 문서로 만듭니다.");
+    if(res.skipped) notes.push(res.skipped+"개 블록은 결과 JSON이 아니어서 건너뛰었습니다.");
+    if(parsed.some(function(r){ return !r.final_report_text; }))
+      notes.push("본문(final_report_text)이 없는 건이 있어 A–F 구조에서 복원했습니다.");
+    if(notes.length) say(notes.join(" "), res.skipped||parsed.some(function(r){return !r.final_report_text;})?"err":"ok");
   }
 
   /* ---------- ZIP (저장 방식, 무압축) ---------- */
@@ -368,19 +452,35 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
       +'<w:tblGrid><w:gridCol w:w="'+W[0]+'"/><w:gridCol w:w="'+W[1]+'"/></w:tblGrid>'+body+'</w:tbl>';
   }
 
-  function buildDocx(r,withTrace){
-    var xml="";
-    lines(bodyText(r)).forEach(function(c){
-      if(c.k==="t")      xml+=para(c.s,{b:true,sz:26,after:260,border:true});
-      else if(c.k==="h") xml+=para(c.s,{b:true,sz:22,before:240,after:80});
-      else if(c.k==="l1")xml+=para(c.s,{left:400,hanging:200});
-      else if(c.k==="l2")xml+=para(c.s,{left:800,hanging:200});
-      else               xml+=para(c.s,{left:800});
+  function buildDocx(reports,withTrace,title){
+    var multi=reports.length>1, xml="";
+
+    if(multi){
+      xml+=para(title||"MRI 대응안",{b:true,sz:30,after:300,border:true});
+      xml+=para("□ 대상 이슈",{b:true,sz:22,before:120,after:100});
+      reports.forEach(function(r){ xml+=para("○ "+label(r),{left:400,hanging:200,after:50}); });
+    }
+
+    reports.forEach(function(r,i){
+      var first=true;
+      lines(bodyText(r)).forEach(function(c){
+        if(c.k==="t"){ xml+=para(c.s,{b:true,sz:26,after:260,border:true,pageBreak:(multi||i>0)&&first}); first=false; }
+        else if(c.k==="h") xml+=para(c.s,{b:true,sz:22,before:240,after:80});
+        else if(c.k==="l1")xml+=para(c.s,{left:400,hanging:200});
+        else if(c.k==="l2")xml+=para(c.s,{left:800,hanging:200});
+        else               xml+=para(c.s,{left:800});
+      });
     });
+
     if(withTrace){
-      xml+=para("[부록] 추적정보",{b:true,sz:22,after:140,pageBreak:true});
-      xml+=para("내부 검수용이며 제출본에는 포함하지 않는다.",{sz:19,after:160,color:"666666"});
-      xml+=table(traceRows(r));
+      reports.forEach(function(r,i){
+        if(i===0){
+          xml+=para("[부록] 추적정보",{b:true,sz:22,after:140,pageBreak:true});
+          xml+=para("내부 검수용이며 제출본에는 포함하지 않는다.",{sz:19,after:160,color:"666666"});
+        }
+        if(multi) xml+=para("○ "+label(r),{b:true,sz:21,before:i?240:0,after:90});
+        xml+=table(traceRows(r));
+      });
     }
     var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       +'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
@@ -410,8 +510,8 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
     render();
     if(!parsed){ say("먼저 올바른 JSON을 붙여넣으세요.","err"); return; }
     try{
-      var blob=buildDocx(parsed,$("trace").checked);
-      var name="MRI_"+String(parsed.issue_id||"response").replace(/[^\w.-]/g,"_")+".docx";
+      var blob=buildDocx(parsed,$("trace").checked,$("title").value.trim());
+      var name=defaultName(parsed);
       var url=URL.createObjectURL(blob);
       var a=document.createElement("a");
       a.href=url; a.download=name; document.body.appendChild(a); a.click();
@@ -427,7 +527,9 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
     render();
     if(!parsed){ say("먼저 올바른 JSON을 붙여넣으세요.","err"); return; }
     var html='<div style="font-family:맑은 고딕">'+preview.innerHTML+"</div>";
-    var text=lines(bodyText(parsed)).map(function(c){return c.s}).join("\n");
+    var text=parsed.map(function(r){
+      return lines(bodyText(r)).map(function(c){return c.s}).join("\n");
+    }).join("\n\n");
     var done=function(){ say("복사했습니다. 한글이나 Word에 붙여넣으세요.","ok"); };
     if(navigator.clipboard&&window.ClipboardItem){
       navigator.clipboard.write([new ClipboardItem({
@@ -452,14 +554,23 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
 
   src.addEventListener("input",render);
   $("trace").addEventListener("change",render);
+  $("title").addEventListener("input",render);
 
-  function readFile(f){
-    var rd=new FileReader();
-    rd.onload=function(){ src.value=rd.result; render(); };
-    rd.onerror=function(){ say("파일을 읽지 못했습니다.","err"); };
-    rd.readAsText(f,"utf-8");
+  function readFiles(list){
+    var files=Array.prototype.slice.call(list||[]);
+    if(!files.length) return;
+    var texts=new Array(files.length), left=files.length;
+    files.forEach(function(f,i){
+      var rd=new FileReader();
+      rd.onload=function(){
+        texts[i]=rd.result;
+        if(--left===0){ src.value=texts.join("\n\n"); render(); }
+      };
+      rd.onerror=function(){ texts[i]=""; if(--left===0){ src.value=texts.join("\n\n"); render(); say("일부 파일을 읽지 못했습니다.","err"); } };
+      rd.readAsText(f,"utf-8");
+    });
   }
-  $("file").addEventListener("change",function(e){ if(e.target.files[0]) readFile(e.target.files[0]); });
+  $("file").addEventListener("change",function(e){ readFiles(e.target.files); });
   ["dragenter","dragover"].forEach(function(ev){
     drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add("over"); });
   });
@@ -467,8 +578,7 @@ footer{margin-top:26px;border-top:1px solid var(--rule);padding-top:16px;font-fa
     drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove("over"); });
   });
   drop.addEventListener("drop",function(e){
-    var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
-    if(f) readFile(f);
+    if(e.dataTransfer&&e.dataTransfer.files) readFiles(e.dataTransfer.files);
   });
 })();
 </script>
