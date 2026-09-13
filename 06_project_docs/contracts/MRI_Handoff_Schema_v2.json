@@ -1,6 +1,6 @@
 {
   "artifact_type": "MRI_AGENT_HANDOFF_SCHEMA",
-  "version": "2026-09-12.v2",
+  "version": "2026-09-13.v3",
   "purpose": "Agent 1 Screening 결과를 Agent 2 Research & Response에 정보손실 없이 전달하기 위한 고정 계약",
   "contract": {
     "producer": "MRI Screening Agent",
@@ -20,7 +20,8 @@
     "Agent 2는 screening classification을 재분류하지 않는다.",
     "Agent 2는 selected issue의 연구범위를 임의로 다른 MRI 이슈까지 확장하지 않는다.",
     "Issue Context Package와 MRI 전체 원문이 충돌하면 원문을 우선하고 discrepancy를 기록한다.",
-    "Screening 결과는 연구의 시작점이지 사실근거가 아니다. 외부 사실은 Retrieval/Evidence에서 별도 검증한다."
+    "Screening 결과는 연구의 시작점이지 사실근거가 아니다. 외부 사실은 Retrieval/Evidence에서 별도 검증한다.",
+    "connection_logic / recommendation_reason / confidence / 0점 렌즈 사유는 사람이 판정을 검토하기 위한 필수 근거다. 03X는 Stage 03 값을 그대로 옮기고, Responder는 전 이슈(EXCLUDE 포함)에 대해 이를 화면에 출력한다."
   ],
   "agent2_intake_checks": [
     "필수 필드 존재",
@@ -29,7 +30,8 @@
     "fidelity.must_preserve_themes 1개 이상",
     "classification과 recommended_for_research의 논리적 일관성",
     "selected issue 외 다른 issue 혼입 없음",
-    "lens_results 5개 키 모두 존재(언더스코어 표기)"
+    "lens_results 5개 키 모두 존재(언더스코어 표기)",
+    "screening.connection_logic 3개 키 존재"
   ],
   "example": {
     "handoff_version": "MRI_ISSUE_CONTEXT_V1",
@@ -68,26 +70,39 @@
           "classification": "OPPORTUNITY",
           "screening_rationale": "고객·채널·상품·그룹 협업 관점에서 사업기회 검토 가능",
           "recommended_for_research": true,
+          "confidence": "high",
+          "connection_logic": {
+            "mri_change": "원문이 확인한 변화(예: 퇴직연금 적립금 500조원 돌파, DC·IRP 실적배당형 비중 확대)",
+            "asset_manager_mechanism": "그 변화에 대응하는 자산운용사의 기능(예: 퇴직연금 투자상품·자산배분·일임)",
+            "practical_possibility": "원문 범위에서 실행 가능성이 어디까지 확인되는지, 무엇이 남는지"
+          },
+          "recommendation_reason": "조사 권고 여부의 이유. EXCLUDE도 왜 제외했는지를 남긴다.",
+          "additional_research_questions": [],
           "lens_results": {
             "Product": {
               "score": 0,
-              "reason": ""
+              "basis_type": "NO_LINK|MRI_PLUS_GENERAL_AM_MECHANISM|EXTERNAL_VALIDATION_REQUIRED|MRI_EXPLICIT",
+              "reason": "0점이어도 사유를 반드시 채운다. EXCLUDE 판정의 유일한 검토 근거다."
             },
             "Investment_Theme": {
               "score": 0,
-              "reason": ""
+              "basis_type": "NO_LINK|MRI_PLUS_GENERAL_AM_MECHANISM|EXTERNAL_VALIDATION_REQUIRED|MRI_EXPLICIT",
+              "reason": "0점이어도 사유를 반드시 채운다. EXCLUDE 판정의 유일한 검토 근거다."
             },
             "Customer": {
               "score": 0,
-              "reason": ""
+              "basis_type": "NO_LINK|MRI_PLUS_GENERAL_AM_MECHANISM|EXTERNAL_VALIDATION_REQUIRED|MRI_EXPLICIT",
+              "reason": "0점이어도 사유를 반드시 채운다. EXCLUDE 판정의 유일한 검토 근거다."
             },
             "Channel": {
               "score": 0,
-              "reason": ""
+              "basis_type": "NO_LINK|MRI_PLUS_GENERAL_AM_MECHANISM|EXTERNAL_VALIDATION_REQUIRED|MRI_EXPLICIT",
+              "reason": "0점이어도 사유를 반드시 채운다. EXCLUDE 판정의 유일한 검토 근거다."
             },
             "Group_Collaboration": {
               "score": 0,
-              "reason": ""
+              "basis_type": "NO_LINK|MRI_PLUS_GENERAL_AM_MECHANISM|EXTERNAL_VALIDATION_REQUIRED|MRI_EXPLICIT",
+              "reason": "0점이어도 사유를 반드시 채운다. EXCLUDE 판정의 유일한 검토 근거다."
             }
           }
         }
@@ -225,6 +240,8 @@
           "classification",
           "screening_rationale",
           "recommended_for_research",
+          "connection_logic",
+          "recommendation_reason",
           "lens_results"
         ],
         "properties": {
@@ -242,6 +259,45 @@
           },
           "recommended_for_research": {
             "type": "boolean"
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "connection_logic": {
+            "type": "object",
+            "required": [
+              "mri_change",
+              "asset_manager_mechanism",
+              "practical_possibility"
+            ],
+            "properties": {
+              "mri_change": {
+                "type": "string",
+                "minLength": 1
+              },
+              "asset_manager_mechanism": {
+                "type": "string",
+                "minLength": 1
+              },
+              "practical_possibility": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "recommendation_reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additional_research_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "lens_results": {
             "required": [
