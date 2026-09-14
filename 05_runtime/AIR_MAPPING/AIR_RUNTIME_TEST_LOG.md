@@ -443,3 +443,41 @@ TDF2040 793억(2.64%) · TDF2045 1,562억(2.28%) · 성장주도코리아30 982.
 탐색 경로 문자열이다. S06-T03 결과도 `kb_tool_called: false`,
 `records_derived_only_from_tool_output: false` 를 달고 있다.
 사실이면 `ACTUAL-KB-CALL PROOF` 위반이다. 다음 실행에서 T06 을 따로 확인한다.
+
+---
+
+## 2026-09-14 — 에이전트1 03X: handoff JSON 에서 아무도 읽지 않는 필드 제거
+
+검토서가 S03(7건 중)에서 잘린다. 같은 출력 안에서 JSON 과 분량을 다투는데,
+「분량이 빠듯하면 검토서를 줄이고 JSON 을 온전히 낸다」가 규칙이라 검토서가 먼저 죽는다.
+우선순위를 뒤집으면 에이전트2 입력이 깨지므로, **JSON 쪽 분량을 줄였다.**
+
+에이전트2 33개 노드 프롬프트 전수 검색 결과:
+
+| 필드 | 에이전트2에서 참조하는 노드 수 |
+|---|---|
+| `must_preserve_themes` | 9 |
+| `original_mri_excerpt` | 6 |
+| `issue_title` | 5 |
+| `upstream_issue_summary` | 2 |
+| **`source_issue_detail`** | **0** |
+| **`source_key_changes`** | **0** |
+| `screening_dashboard` | 0 (사람이 이슈를 고르는 색인이라 유지) |
+
+→ `source_issue_detail` / `source_key_changes` 를 handoff JSON 스키마에서 뺐다.
+원문은 `original_mri_excerpt`, 요약은 `upstream_issue_summary` 가 이미 싣는다.
+`source_key_changes` 자체는 03 이 계속 만들고 검토서 「핵심 변화」가 렌더한다. 사라지지 않는다.
+
+**같이 발견한 자기모순 — 노드 10 과 같은 형태다.**
+JSON 스키마 블록은 `confidence` / `connection_logic` / `recommendation_reason` 을
+전부 찍어 놓고, 1,900자 뒤의 「JSON 분량」 규칙이 "JSON 에서는 뺀다"고 말한다.
+모델은 스키마를 먼저 읽는다. 스키마에서 지웠다.
+
+그리고 검토서 분량 규칙이 "`source_issue_detail` 은 **아래 JSON 에 이미 전문이 들어간다**"고
+근거를 대고 있었는데, 그 JSON 필드를 없앴으므로 근거가 거짓이 된다. 문구를 고쳤다.
+
+03X 프롬프트 9,832자 → 9,700자. 줄어든 건 프롬프트가 아니라 **출력 JSON** 이다.
+이슈 7건 × (원문 발췌 배열 + 변화 배열 + 3필드) 만큼 검토서 자리가 생긴다.
+
+다음 실행에서 볼 것: 검토서가 S07 까지 가는지 / JSON 이 닫히는지 /
+`must_preserve_themes` 가 계속 3–6개로 차는지.
