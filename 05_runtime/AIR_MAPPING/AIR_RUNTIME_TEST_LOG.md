@@ -194,3 +194,44 @@ JSON 슬림화(lens reason · connection_logic · recommendation_reason · confi
 첫 실행의 `self_check.kb_call_count` 로 어느 쪽이 돌았는지 먼저 확인한다.
 2 면 이전 버전, 8 이면 현재 버전이다. 이 값이 기대와 다른 실행은
 프롬프트 수정의 성패 판단에 쓰지 않는다.
+
+## 2026-09-14 — 핸드오프 JSON 완주. 잘림이 검토서로 옮겨갔다
+
+8회본 + 03X 재정렬로 끝까지 돌았다. 판정은 OPPORTUNITY 1 · MONITOR 3 · EXCLUDE 3,
+`kb_call_count: 8`, 02 는 49개 검사 전부 PASS, **JSON 은 `packager_self_check` 까지 도달**했다.
+잘린 곳은 검토서의 S05 투자테마 줄이다. 재정렬이 설계대로 작동한 것이다 —
+넘치는 분량이 기계가 파싱해야 할 산출물이 아니라 사람이 읽는 쪽에서 잘렸다.
+
+**남은 일은 검토서를 예산 안에 넣는 것이다.** 무엇을 빼도 되는지 먼저 쟀다.
+
+에이전트2 37개 노드 프롬프트 전문에서 핸드오프 필드 이름을 센 결과:
+
+| 필드 | 참조 | 
+|---|---|
+| `must_preserve_themes` | 29회 |
+| `original_mri_excerpt` | 13회 |
+| `upstream_issue_summary` | 3회 |
+| `recommended_for_research` | 3회 |
+| `screening_rationale` | 2회 |
+| **`source_issue_detail`** | **0회** |
+| **`source_key_changes`** | **0회** |
+| **`screening_dashboard`** | **0회** |
+
+`source_issue_detail` 은 JSON 에서 가장 큰 블록인데 에이전트2 가 이름을 한 번도 부르지 않는다.
+**그래도 이번에는 JSON 을 건드리지 않는다.** 방금 처음 완주했고, 한 번에 하나씩이다.
+0회라는 것이 "내용을 안 쓴다"의 증명은 아니다 — 패키지 전체를 읽으라는 지시가 따로 있을 수 있고,
+PoC 는 외부 검색이 없어 에이전트2 의 입력이 KB 와 이 패키지뿐이다.
+
+**대신 검토서만 줄였다.**
+
+1. **EXCLUDE 는 축약 양식.** EXCLUDE 는 다섯 렌즈가 모두 0점이라는 뜻이고,
+   그때 렌즈별 사유 다섯 줄은 「연결되지 않는다」를 다섯 번 바꿔 쓴 것이다.
+   판정 사유가 이미 그 다섯을 합쳐 말한다. 판정 줄·렌즈 점수 한 줄·핵심 변화·제외 사유만 낸다.
+   1점 이상인 렌즈가 하나라도 있으면 EXCLUDE 가 아니므로 이 양식을 쓰지 않는다.
+2. **「원문이 말하는 것」 삭제.** `upstream_issue_summary` 는 `source_key_changes` 의
+   산문판이다. 「핵심 변화」가 같은 사실을 더 짧고 정확하게 싣는다.
+3. **모자랄 때 줄이는 순서를 명시.** EXCLUDE 검토서 → 그다음에도 모자라면 핵심 변화.
+   OPPORTUNITY·MONITOR 는 마지막까지 온전히 낸다.
+
+절감분은 약 6,000자. 잘린 지점이 7건 중 5건째였으므로 여유가 남는다.
+이번 실행에서 볼 것은 **검토서가 S07 까지 나오는지** 하나다.
