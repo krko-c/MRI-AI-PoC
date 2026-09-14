@@ -1,6 +1,6 @@
 {
   "artifact_type": "MRI_AGENT_HANDOFF_SCHEMA",
-  "version": "2026-09-13.v3",
+  "version": "2026-09-14.v4",
   "purpose": "Agent 1 Screening 결과를 Agent 2 Research & Response에 정보손실 없이 전달하기 위한 고정 계약",
   "contract": {
     "producer": "MRI Screening Agent",
@@ -21,7 +21,9 @@
     "Agent 2는 selected issue의 연구범위를 임의로 다른 MRI 이슈까지 확장하지 않는다.",
     "Issue Context Package와 MRI 전체 원문이 충돌하면 원문을 우선하고 discrepancy를 기록한다.",
     "Screening 결과는 연구의 시작점이지 사실근거가 아니다. 외부 사실은 Retrieval/Evidence에서 별도 검증한다.",
-    "connection_logic / recommendation_reason / confidence / 0점 렌즈 사유는 사람이 판정을 검토하기 위한 필수 근거다. 03X는 Stage 03 값을 그대로 옮기고, Responder는 전 이슈(EXCLUDE 포함)에 대해 이를 화면에 출력한다."
+    "connection_logic / recommendation_reason / confidence / 0점 렌즈 사유는 사람이 판정을 검토하기 위한 필수 근거다. 03X는 Stage 03 값을 그대로 옮기고, Responder는 전 이슈(EXCLUDE 포함)에 대해 이를 화면에 출력한다.",
+    "source_evidence_snippets 는 발행하지 않는다. original_mri_excerpt 가 유일한 원문 발췌 통로이며 Agent 2 는 snippets 를 읽지 않는다.",
+    "screening_dashboard 는 색인이다. 판정 사유는 package.screening.screening_rationale 에만 둔다."
   ],
   "agent2_intake_checks": [
     "필수 필드 존재",
@@ -191,9 +193,6 @@
           "original_mri_excerpt": {
             "type": "string",
             "minLength": 1
-          },
-          "source_evidence_snippets": {
-            "type": "array"
           },
           "upstream_issue_summary": {
             "type": "string",
