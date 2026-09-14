@@ -534,3 +534,51 @@ JSON 스키마 블록은 `confidence` / `connection_logic` / `recommendation_rea
 
 다음 실행에서 볼 것: 도구 이름 오류가 0 인지 / 06F 13건·06A T11 이 실제로 도는지 /
 `company_status_snapshot` 에 NH아문디 펀드가 다시 들어오는지 / 노드 10 본문이 계속 나오는지.
+
+---
+
+## 2026-09-14 — 에이전트1 재실행: 검토서 잘림 해결
+
+세 가지 다 통과했다.
+
+| 확인 항목 | 직전 | 이번 |
+|---|---|---|
+| 검토서 도달 범위 | S03 에서 잘림 | **S01–S07 전부** |
+| handoff JSON | — | `packager_self_check` 까지 닫힘, `output_complete: true`, 7/7 |
+| `must_preserve_themes` | 빈 배열 | **7개 이슈 전부 5–6개** |
+
+제거한 필드가 실제로 안 나왔다 — `source_issue_detail` · `source_key_changes` ·
+`confidence` · `connection_logic` · `recommendation_reason` 모두 JSON 에 없다.
+검토서에는 렌즈 5개 사유가 이슈마다 전문으로 실렸고, EXCLUDE 도 같은 양식이다.
+물결표도 `'26–'28` · `15–65%` · `'20–'24` 로 나왔다. 취소선 없음.
+
+판정 분포 OPPORTUNITY 1(S06) / MONITOR 3(S02·S03·S04) / EXCLUDE 3(S01·S05·S07) — 직전과 같다.
+
+**남은 결함 1 — `must_preserve_themes` 에 원문 발췌에 없는 항목이 들어간다.**
+
+S06 의 테마 「2025년 말 기준 퇴직연금 적립금 500조원 돌파」가 그렇다. 경로를 따라가면:
+
+- 01 의 S06 `issue_detail` 6개 항목 어디에도 퇴직연금 500조원이 없다. `mri_evidence` 3건에도 없다.
+  `issue_summary` 와 `key_changes[2]` 에만 있다.
+- 02 는 이 값을 KB 에서 확인하고 「2025년 말 기준」을 덧붙였다(CORRECTABLE). 옳은 판정이다.
+  다만 **확인한 사실을 `issue_detail` 이나 `mri_evidence` 에 되돌려 넣지 않았다.**
+- 03X 의 `original_mri_excerpt` 에도 따라서 없다. 그런데 `must_preserve_themes` 에는 있다.
+
+에이전트2 노드 6개가 `original_mri_excerpt` 를 읽는다. 그 6개는 500조원을 볼 수 없는데
+테마로는 지켜야 한다. 직전 에이전트2 실행이 이 테마를 `must_preserve_themes_unsupported`
+로 분류한 것은 그래서다(에이전트2 판단 자체는 정확했다).
+
+고칠 지점은 둘 중 하나다.
+(a) 02 가 확인한 사실을 `issue_detail`/`mri_evidence` 에 복원하게 한다 — 근본 위치.
+(b) 03X 가 `original_mri_excerpt` 를 `must_preserve_themes` 전부를 덮도록 구성하게 한다.
+
+**남은 결함 2 — KB 가 이슈당 약 1,100자만 돌려준다.**
+
+01 의 `kb_return_diagnostic`: `kb_raw_char_count: 11016`, `returned_full_document: false`,
+이슈별 952–1,605자. 01 스스로 누락 가능성을 적었다 — 표 형태 수치, 각주(※),
+농협금융 방향 섹션의 실행계획. 결함 1 도 여기서 나온다.
+
+**즉 파이프라인 전체가 원문이 아니라 요약본 위에서 돈다.** 프롬프트로 고칠 수 있는 문제가
+아니다. KB 청킹·검색 설정 쪽이다. PoC 한계로 기록한다.
+
+**남은 결함 3 — `additional_research_questions` 가 7개 이슈 전부 빈 배열이다.** 기존 확인 사항.
