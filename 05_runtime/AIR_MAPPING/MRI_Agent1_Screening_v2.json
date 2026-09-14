@@ -6,7 +6,7 @@
   "MapValue": {
     "FunctionMaps": [
       {
-        "PK_ID": "2bb08485-0230-466d-ba06-a7ae97d485ba",
+        "PK_ID": "97793799-79af-cd6d-817b-25762c66f7e8",
         "COL_NAME": "Supervisor",
         "COL_DESC": "MRI Screening: PDF/원문 → Extraction → Fidelity → Screening → Issue Context Packages",
         "COL_X": 40,
@@ -38,7 +38,7 @@
         }
       },
       {
-        "PK_ID": "7b88f206-e588-4513-ab42-5d712f6c16cf",
+        "PK_ID": "9cc52b7d-017c-7bc8-358d-ede68dc48796",
         "COL_NAME": "Output 1",
         "COL_DESC": "",
         "COL_X": 40,
@@ -54,7 +54,7 @@
         "node_type": "OUTPUT"
       },
       {
-        "PK_ID": "62076d16-c1b3-8353-f766-6fe8fb88d1cf",
+        "PK_ID": "66b3b972-c902-aa6b-d662-c1a726e14d4d",
         "COL_NAME": "kb-6b0fd700",
         "COL_DESC": "CURRENT_MRI",
         "COL_X": 520,
@@ -72,7 +72,7 @@
         "search_type": "rag"
       },
       {
-        "PK_ID": "431ced50-43dd-7f9b-1dfa-626091ae82e9",
+        "PK_ID": "d44f2a59-010a-a51b-b243-5824cd7210b9",
         "COL_NAME": "01_mri_issue_extraction_agent",
         "COL_DESC": "Issue Extraction - cumulative payload",
         "COL_X": 360,
@@ -99,7 +99,7 @@
         "recursion_limit": 20
       },
       {
-        "PK_ID": "fca236a1-5639-aa5c-149f-4cc64647b4e3",
+        "PK_ID": "2201d52f-acd3-2351-f024-2fa3f0e55239",
         "COL_NAME": "02_source_fidelity_validator",
         "COL_DESC": "Source/Fidelity Validator - cumulative payload",
         "COL_X": 680,
@@ -126,7 +126,7 @@
         "recursion_limit": 15
       },
       {
-        "PK_ID": "4b313260-315b-95fc-fb17-272da358d183",
+        "PK_ID": "4c239d79-49bd-f6ef-a2e7-6bdaeaf34844",
         "COL_NAME": "03_mri_screening_agent",
         "COL_DESC": "Five-lens Screening - cumulative payload",
         "COL_X": 1000,
@@ -153,7 +153,7 @@
         "recursion_limit": 15
       },
       {
-        "PK_ID": "33bdb4cc-cc0d-4de0-891f-6598198b4c65",
+        "PK_ID": "6bbf572c-77aa-3850-0e35-a55acba6eea2",
         "COL_NAME": "03X ISSUE CONTEXT PACKAGER r1_HANDOFF",
         "COL_DESC": "Screening 결과를 Research용 Issue Context Package로 변환",
         "COL_X": 1320,
@@ -180,7 +180,7 @@
         "recursion_limit": 2
       },
       {
-        "PK_ID": "d4919b16-c50a-4907-8983-d0c6e9e15c61",
+        "PK_ID": "8b69a8e2-f42a-bf75-2042-c837d230fc97",
         "COL_NAME": "Responder",
         "COL_DESC": "Platform-required. Disabled in the product; 03X output is the answer. If ever enabled, echo only.",
         "COL_X": 40,
@@ -204,10 +204,10 @@
           "top_k": 10,
           "stop_sequences": ""
         },
-        "use_responser": true
+        "use_responser": false
       },
       {
-        "PK_ID": "622695c3-4280-47f1-8c47-54b903febeeb",
+        "PK_ID": "0c47d19b-9fb7-c523-5173-3b99cc9e94a7",
         "COL_NAME": "End 1",
         "COL_DESC": "MRI Screening workflow end",
         "COL_X": 1640,
@@ -225,8 +225,8 @@
     ],
     "JoinMaps": [
       {
-        "FK_START_MAP_ID": "2bb08485-0230-466d-ba06-a7ae97d485ba",
-        "FK_END_MAP_ID": "431ced50-43dd-7f9b-1dfa-626091ae82e9",
+        "FK_START_MAP_ID": "97793799-79af-cd6d-817b-25762c66f7e8",
+        "FK_END_MAP_ID": "d44f2a59-010a-a51b-b243-5824cd7210b9",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -234,8 +234,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "431ced50-43dd-7f9b-1dfa-626091ae82e9",
-        "FK_END_MAP_ID": "fca236a1-5639-aa5c-149f-4cc64647b4e3",
+        "FK_START_MAP_ID": "d44f2a59-010a-a51b-b243-5824cd7210b9",
+        "FK_END_MAP_ID": "2201d52f-acd3-2351-f024-2fa3f0e55239",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -243,8 +243,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "fca236a1-5639-aa5c-149f-4cc64647b4e3",
-        "FK_END_MAP_ID": "4b313260-315b-95fc-fb17-272da358d183",
+        "FK_START_MAP_ID": "2201d52f-acd3-2351-f024-2fa3f0e55239",
+        "FK_END_MAP_ID": "4c239d79-49bd-f6ef-a2e7-6bdaeaf34844",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -252,8 +252,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "4b313260-315b-95fc-fb17-272da358d183",
-        "FK_END_MAP_ID": "33bdb4cc-cc0d-4de0-891f-6598198b4c65",
+        "FK_START_MAP_ID": "4c239d79-49bd-f6ef-a2e7-6bdaeaf34844",
+        "FK_END_MAP_ID": "6bbf572c-77aa-3850-0e35-a55acba6eea2",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -261,8 +261,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "33bdb4cc-cc0d-4de0-891f-6598198b4c65",
-        "FK_END_MAP_ID": "622695c3-4280-47f1-8c47-54b903febeeb",
+        "FK_START_MAP_ID": "6bbf572c-77aa-3850-0e35-a55acba6eea2",
+        "FK_END_MAP_ID": "0c47d19b-9fb7-c523-5173-3b99cc9e94a7",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -270,8 +270,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "2bb08485-0230-466d-ba06-a7ae97d485ba",
-        "FK_END_MAP_ID": "d4919b16-c50a-4907-8983-d0c6e9e15c61",
+        "FK_START_MAP_ID": "97793799-79af-cd6d-817b-25762c66f7e8",
+        "FK_END_MAP_ID": "8b69a8e2-f42a-bf75-2042-c837d230fc97",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -279,8 +279,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "d4919b16-c50a-4907-8983-d0c6e9e15c61",
-        "FK_END_MAP_ID": "7b88f206-e588-4513-ab42-5d712f6c16cf",
+        "FK_START_MAP_ID": "8b69a8e2-f42a-bf75-2042-c837d230fc97",
+        "FK_END_MAP_ID": "9cc52b7d-017c-7bc8-358d-ede68dc48796",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -288,8 +288,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "431ced50-43dd-7f9b-1dfa-626091ae82e9",
-        "FK_END_MAP_ID": "62076d16-c1b3-8353-f766-6fe8fb88d1cf",
+        "FK_START_MAP_ID": "d44f2a59-010a-a51b-b243-5824cd7210b9",
+        "FK_END_MAP_ID": "66b3b972-c902-aa6b-d662-c1a726e14d4d",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
@@ -297,8 +297,8 @@
         "condition_key": null
       },
       {
-        "FK_START_MAP_ID": "fca236a1-5639-aa5c-149f-4cc64647b4e3",
-        "FK_END_MAP_ID": "62076d16-c1b3-8353-f766-6fe8fb88d1cf",
+        "FK_START_MAP_ID": "2201d52f-acd3-2351-f024-2fa3f0e55239",
+        "FK_END_MAP_ID": "66b3b972-c902-aa6b-d662-c1a726e14d4d",
         "edge_type": "FIXED",
         "MAPPINGVALUE": [],
         "DisplayName": "",
