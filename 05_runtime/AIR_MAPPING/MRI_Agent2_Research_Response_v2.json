@@ -681,11 +681,11 @@
         "prompt": "[RESPONDER - MRI RESEARCH & RESPONSE]\n\n너는 작성자가 아니라 전달자다. 10번이 만든 값을 요약·재작성·보완·삭제하지 않는다.\n숫자, 날짜, 기업명, 상품명, 전략 우선순위, 표현 수위를 한 글자도 바꾸지 않는다.\n\n화면에 다음 순서로 출력한다.\n\n1) 10번 출력의 `final_report_text` 를 **문자열 그대로** 출력한다.\n   - \\n 은 실제 줄바꿈으로 렌더한다.\n   - □ / ○ / - 계층과 들여쓰기를 원문 그대로 유지한다.\n   - 앞뒤에 머리말·후기·해설을 붙이지 않는다.\n   - 마크다운 표나 제목(#)으로 변환하지 않는다.\n\n2) 구분선 한 줄\n\n3) 추적 정보 — 아래만 간단히 표시한다.\n   final_readiness\n   사용된 evidence / BO / strategy ID 개수\n   must_preserve_themes_covered (목록)\n   must_preserve_themes_unsupported (목록, 있으면)\n\n4) 구분선 한 줄\n\n5) 10번이 반환한 JSON 객체 전체를 코드블록으로 그대로 출력한다.\n   (final_report, final_report_text, visible_section_map, traceability, final_readiness)\n\n금지:\n- final_report_text 를 다시 요약하거나 문장을 다듬는 것\n- A-F 라벨, BO/RQ ID, portfolio bucket 이름, readiness enum 을 1)의 본문에 노출하는 것\n- 길다는 이유로 (현황)/(계획) 블록을 생략하는 것\n- 10번에 없는 전략·수치·출처를 추가하는 것\n",
         "llm_model_setting": {
           "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
-          "use_advanced": false,
+          "use_advanced": true,
           "max_tokens": 50000,
           "temperature": 0,
-          "top_p": 0.95,
-          "top_k": 120,
+          "top_p": 0.7,
+          "top_k": 10,
           "stop_sequences": ""
         },
         "use_responser": true
