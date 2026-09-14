@@ -47,3 +47,32 @@ AIR Studio 접속 불가로 정적 검증만 수행.
 
 Test result:
 - AIR Studio import/run 후 기입.
+
+## 2026-09-14 — Agent 2 기준 파일을 플랫폼 내보내기로 교체
+
+`mri_stg_20260914_090243.json` (AIR Studio 내보내기) 를 Agent 2 의 기준 파일로 채택.
+앞으로 Agent 2 수정은 이 파일을 출발점으로 한다.
+
+**직전 레포 버전 대비 변경**
+- `kb-2831d472` 노드 추가, `06B ZEROIN PUBLIC DETAIL → kb-2831d472` 엣지 추가 (사용자 작업)
+- 노드 37 / 엣지 37, 고립노드 없음, 중복 엣지 없음, Agent 1 과 PK 충돌 0
+- 전 노드의 프롬프트와 max_tokens 는 직전 레포 버전과 동일 (16000 / 50000 두 값만 존재)
+
+**형식 차이 — 이후 편집 시 반드시 유지**
+JoinMaps 스키마가 다르다. 플랫폼 내보내기는 엣지에 `PK_ID` 가 없고
+`MAPPINGVALUE` / `SubDesc` 를 갖는다. 직전 레포 버전은 v1 에서 파생된 형태라
+엣지에 `PK_ID` 가 있었다. 왕복이 검증된 쪽은 플랫폼 내보내기 형식이므로
+엣지를 추가·수정할 때 `PK_ID` 를 새로 만들어 넣지 않는다.
+
+| | 플랫폼 내보내기(현행) | 직전 레포 버전 |
+|---|---|---|
+| JoinMap 키 | FK_START_MAP_ID, FK_END_MAP_ID, edge_type, MAPPINGVALUE, DisplayName, SubDesc, condition_key | FK_START_MAP_ID, FK_END_MAP_ID, edge_type, DisplayName, condition_key, PK_ID |
+
+**해소된 기존 제약**
+06B 미연결 상태가 해소되어 `mri_zeroin_public2` (펀드 상세, 설정액 2시점) 의
+의존 검색 경로가 열렸다. 이전 수동 실행의 "06B KB 미연결" 단서는 더 이상 적용되지 않는다.
+
+**남은 미연결**
+`mri_zeroin_etf` (06C 의 kb-f01bb5d9) 는 연결되어 있으나 수동 실행 환경에서는
+디렉터리가 없어 RETRIEVAL_ERROR 로 처리되었다. 플랫폼에서의 동작은 실행으로 확인 필요.
+06P / 06R1 / 06R2 / 06R3 / 06S / 06T / 06X 는 계획·수집·판정 노드이므로 KB 미연결이 정상이다.
