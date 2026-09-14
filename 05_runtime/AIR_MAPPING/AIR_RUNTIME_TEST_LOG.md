@@ -582,3 +582,65 @@ S06 의 테마 「2025년 말 기준 퇴직연금 적립금 500조원 돌파」�
 아니다. KB 청킹·검색 설정 쪽이다. PoC 한계로 기록한다.
 
 **남은 결함 3 — `additional_research_questions` 가 7개 이슈 전부 빈 배열이다.** 기존 확인 사항.
+
+---
+
+## 2026-09-14 — 에이전트2 3차 실행: 조회를 포기하고 보고서를 썼다
+
+사용자가 회사 시간 제한으로 중간 과정까지만 복사. **최종 출력물 구간은 비어 있어
+노드 10 이 본문을 냈는지는 이번에 확인할 수 없다.** 그 외는 JSON 으로 판정 가능하다.
+
+**실행된 태스크는 5개다.** 계획 20개(T01–T15 + D01–D05) 중:
+
+| 태스크 | 소스 | 결과 |
+|---|---|---|
+| S06-T01 | policy | NO_RESULT |
+| S06-D02 | policy | NO_RESULT |
+| S06-T02 | news | SUCCESS (주식보상 2조2,811억, 3.3배) |
+| S06-T04 | news | SUCCESS (퇴직연금 501.4조, DC+IRP 54.3%, 실적배당형 24.6%, ETF 48.7조) |
+| S06-T05 | news | SUCCESS (신한 워크플레이스 WM, MOU 100개사) |
+
+나머지 15개는 `AWAITING_EXECUTION`. `company_status_snapshot` 8개 배열 전부 비었다.
+`final_report_domain_coverage` 의 `company_status` 는 evidence_strength NONE.
+**당사 현황이 또 0이다.** 2차 전 실행에서 확보했던 NH아문디 펀드 6건이 다시 사라졌다.
+
+**06E 장부는 정상이다** — matched 2, executed 2, all_my_tasks_done true.
+06A·06C·06D·06B·06D2 는 이번 붙여넣기에 출력이 없어 실행 여부를 판정할 수 없다.
+다음 실행에서는 이 노드들의 출력 유무를 따로 봐야 한다.
+
+**결함 1 — 조회 노드가 보고서를 썼다.**
+
+블록 두 개가 `executive_summary` · `final_assessment` · `strategic_options` ·
+`completeness_score` · `answer_status` · `stakeholder_engagement` · `next_steps` ·
+`decision_points` 를 담은 **전략 보고서**를 냈다. 37개 프롬프트 전수 검색 결과
+이 필드명들은 **어느 계약에도 없다.** `key_findings` 는 10개 프롬프트에 나오지만
+전부 "MUST NEVER create" 금지 목록이다.
+
+즉 5건만 조회하고 15건을 남긴 채, 그 5건으로 컨설팅 리포트를 썼다.
+`ABSOLUTE EXECUTION CONTRACT` 의 "This is a RETRIEVAL STAGE, not a synthesis stage"가
+통째로 무시됐다.
+
+**결함 2 — `unresolved` 가 탈출구가 되었다.**
+
+`unresolved_retrieval_needs` 15건의 사유가 `AWAITING_EXECUTION`, 노트는 "미실행".
+이 필드는 원래 **부르고 실패한** 태스크 자리인데, **부르지도 않은** 태스크를 여기 적으면
+장부 규칙과 형식상 충돌하지 않는다. 안 한 일에 "미해결"이라는 정당해 보이는 이름표를
+붙여 다음 노드로 넘기면 끝난다. 내가 넣은 장부 규칙의 빈틈이다.
+
+**결함 3 — 도구 이름 오류가 남아 있다.** T06 이 `KB_TOOL_ERROR`,
+노트는 "KB 도구 순환 참조 오류". 지난번 넣은 「네 KB 도구 이름」 블록이
+적어도 이 노드에서는 복구를 만들지 못했다. 다만 이번에는 **오류가 출력에 기록됐다** —
+지난번처럼 조용히 사라지지는 않았다.
+
+**수정**
+1. 9개 조회 노드의 `ABSOLUTE EXECUTION CONTRACT` 금지 목록에 이번에 실제로 나온
+   필드명 8개를 적고, "조회를 대신할 수 있는 산출물은 없다. 보고서는 07·08·09·10 이 쓴다"를 명시.
+2. 장부 규칙에 **5) 안 한 일을 "미해결"로 적지 않는다** 추가.
+   `AWAITING_EXECUTION` · `미실행` 은 허용 사유가 아니며, unresolved 로 넘기려면
+   그 태스크에 `retrieval_proof.kb_tool_called: true` 가 있어야 한다.
+3. 06R1 의 보고서형 필드 폐기 목록에 같은 8개를 추가.
+
+**한 걸음 물러서서 —** 노드 10, 03X, 상한 규칙, 그리고 이번까지 네 번 연속
+같은 형태다. 규칙을 넣으면 그 규칙을 형식적으로 만족시키면서 실질을 빠져나가는
+경로가 남아 있다. 프롬프트만으로 실행을 강제하는 데 한계가 있다는 신호로 기록한다.
+PoC 결과 정리 시 "LLM 자체 점검이 아니라 코드 게이트가 필요한 지점"의 실증 사례다.
