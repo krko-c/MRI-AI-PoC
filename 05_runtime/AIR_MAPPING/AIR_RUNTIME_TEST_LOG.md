@@ -2006,3 +2006,66 @@ ZeroIn 3개 소스는 한 번도 자기 도구를 부르지 못했다.
 고칠 곳은 둘이다 — 03X 에 「02 의 corrections 를 그대로 옮긴다, CORRECTABLE 인데 비면 오류다」,
 02 에 「corrections 가 비면 CORRECTABLE 이 아니라 PASS 다. WARN 사유는 checks 에 남긴다」.
 **사람이 판정을 검토할 때 걸리는 문제이고 산출물의 사실 정확도는 바꾸지 않아서 뒤로 미뤘다.**
+
+---
+
+## 에이전트1 02 — `corrections` 가 빈 `CORRECTABLE` 을 금지했다
+
+### 진단을 고친다 — 03X 가 아니라 02 였다
+
+앞 절에서 이 문제를 「03X 가 스키마의 `[]` 를 베낀 것」으로 적었다. **틀렸다. 확인하지 않고 짐작했다.**
+
+로그를 뒤지니 9/14 08:58 실행에 corrections 가 실제로 붙은 CORRECTABLE 이 하나 있었고,
+**02 와 03X 양쪽에 글자까지 같은 내용으로 나온다.**
+
+    02   "corrections": [{ "field": "key_changes[2]",
+                           "from": "퇴직연금 적립금 500조원 돌파",
+                           "reason": "CURRENT_MRI에 '2025년 말 기준 …' 으로 명시되어 시점 정보 추가 필요" }]
+    03X  "corrections": [{ 같은 내용 그대로 }]
+
+**03X 의 전달은 정상이다.** 02 가 주면 03X 는 넘긴다.
+따라서 S05·S07 의 빈 배열은 **02 가 CORRECTABLE 을 내면서 corrections 를 비운 것**이다.
+
+### 수정 — 02 한 노드, 두 자리
+
+02 의 CORRECTABLE 정의는 이미 「one or more limited source-grounded corrections are required」다.
+`corrections: []` 인 CORRECTABLE 은 **02 자신의 계약에 없는 값**이다.
+새 규칙을 만든 것이 아니라 이미 있는 규칙이 지켜지지 않았다 — 아홉 번째 같은 모양이다.
+
+**1) 판정 매핑에 조건을 붙였다.**
+
+    - WARN **and** a concrete source-grounded correction exists → CORRECTABLE
+    - WARN but nothing concrete to correct → PASS (WARN 사유는 checks 에 남긴다)
+
+**2) 강제 선택을 넣었다. 자기 점검 한 줄이 아니라 도망갈 곳을 막는 쪽이다.**
+
+이 프로젝트에서 이미 확인된 것 — **자기 점검 필드는 자기가 만든 것을 못 잡는다**
+(06 의 `records_derived_only_from_tool_output` 이 그렇게 실패했다).
+그래서 「확인하라」가 아니라 「둘 중 하나를 골라라, 세 번째는 없다」로 적었다.
+
+    (A) corrections 에 항목이 최소 하나 있고 validated_issue 에 반영됨 → CORRECTABLE
+    (B) 구체적 수정안을 만들 수 없음 → PASS, 그 WARN 은 checks 에 status·reason 으로 남긴다
+
+(B) 는 축소가 아니다. **걸린 것은 `checks` 에 다 남고, 그것이 사람이 읽을 자리다.**
+상태 칸에 근거 없는 경고를 남기는 쪽이 축소다.
+`FINAL CHECK` 에도 한 줄 더했다(강제 선택이 본체이고 이쪽은 보조다).
+
+10,998 → 12,143자. **노드 9 / 엣지 9 그대로.**
+
+### 영향 범위 — 라벨 하나다. 판정은 안 바뀐다
+
+어제 이 수정을 「에이전트1 판정 거동을 건드리는 첫 수정」이라고 적었다. **과장이었다.**
+
+- **03 의 판정 규칙은 `validation_status` 를 `FAIL` 에서만 본다.**
+  OPPORTUNITY / MONITOR / EXCLUDE 는 렌즈 점수가 정한다.
+  CORRECTABLE 이 PASS 로 바뀌어도 이 분기에 걸리지 않는다.
+- **에이전트2 33개 노드 중 `fidelity.status` 로 분기하는 노드가 없다.**
+  `fidelity` 를 읽는 04·07·10 은 전부 `must_preserve_themes` 를 가져가려고 읽는다.
+  04 의 `"status": "PASS|CORRECTABLE"` 은 스키마 예시일 뿐이다.
+- **03 의 17번(「Do NOT change it to PASS」)과 충돌하지 않는다.**
+  그것은 03 이 02 의 값을 바꾸지 말라는 규칙이고, 02 가 스스로 판정하는 것과 무관하다.
+
+바뀌는 것은 셋뿐이고 전부 표기다 — 02 요약의 `pass_count`/`correctable_count`,
+검토서 「원문 정합성」 줄, 핸드오프 `fidelity.status`.
+
+**03X 에는 아무것도 넣지 않았다.** 제대로 동작하는 노드에 예비 규칙을 얹지 않는다.
