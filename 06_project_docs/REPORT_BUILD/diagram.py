@@ -92,7 +92,7 @@ def agent2(path):
     cx = W // 2
     y = pad
     c.box(x, y, w, bh, fill=GRAY)
-    c.text(cx, y+bh//2, '에이전트 1 인계 파일 (이슈 1건)', F(13, True), anchor='mm')
+    c.text(cx, y+bh//2, 'MRI 스크리닝 AI 인계 파일 (이슈 1건)', F(13, True), anchor='mm')
     y += bh; c.arrow(cx, y+4*S, gap-4*S); y += gap
     for name, cnt, rows in phases:
         h = hh + rh*len(rows)
