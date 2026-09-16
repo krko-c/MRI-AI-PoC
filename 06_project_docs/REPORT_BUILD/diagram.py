@@ -125,7 +125,7 @@ agent2(os.path.join(d, 'fig_agent2.png'))
 
 # ─────────────────── 공통 전체 구성 (두 보고서 공용) ───────────────────
 def wholemap(path, active):      # active: 1 · 2 · 0(둘 다)
-    w, h = W, 150*S
+    w, h = W, 116*S
     c = Canvas(w, h)
     f_b, f_s, f_t = F(13, True), F(11), F(10, True)
     pad = 14*S
