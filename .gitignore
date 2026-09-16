@@ -79,3 +79,11 @@ Desktop.ini
 *.temp
 *.swp
 *~
+
+# 사내·라이선스 자료는 커밋하지 않는다 (MRI 원문·KB 원문·실행 근거 인용)
+*_evidence.txt
+mri_original.txt
+mri_text.txt
+*.pdf
+kb_real/
+run/kb/

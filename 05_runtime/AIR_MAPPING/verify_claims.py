@@ -24,7 +24,7 @@ from collections import defaultdict
 DEFAULT_KB = ('/tmp/claude-0/-home-user-MRI-AI-PoC/'
               'a05ec66d-a31b-57d1-8c1d-9e11644d0739/scratchpad/run/kb')
 DEFAULT_MRI = ('/tmp/claude-0/-home-user-MRI-AI-PoC/'
-               'a05ec66d-a31b-57d1-8c1d-9e11644d0739/scratchpad/mri_text.txt')
+               'a05ec66d-a31b-57d1-8c1d-9e11644d0739/scratchpad/mri_original.txt')
 
 # ── KB ─────────────────────────────────────────────────
 def norm(s):
@@ -130,6 +130,16 @@ def main():
     mri_path = sys.argv[sys.argv.index('--mri')+1] if '--mri' in sys.argv else DEFAULT_MRI
     mri = {}
     if os.path.exists(mri_path):
+        if mri_path.lower().endswith('.pdf'):      # PDF 를 그대로 줘도 된다
+            import subprocess, tempfile
+            tmp = tempfile.NamedTemporaryFile(suffix='.txt', delete=False).name
+            try:
+                subprocess.run(['pdftotext', '-layout', mri_path, tmp],
+                               check=True, capture_output=True)
+                mri_path = tmp
+            except Exception as e:
+                print(f'✗ PDF 추출 실패({e}). pdftotext 설치 필요, 또는 .txt 로 주십시오')
+                sys.exit(2)
         mri = {'MRI 원문': norm(open(mri_path, encoding='utf-8', errors='ignore').read())}
     mpool = kb_amounts(mri) if mri else []
 
