@@ -23,6 +23,8 @@ from collections import defaultdict
 
 DEFAULT_KB = ('/tmp/claude-0/-home-user-MRI-AI-PoC/'
               'a05ec66d-a31b-57d1-8c1d-9e11644d0739/scratchpad/run/kb')
+DEFAULT_MRI = ('/tmp/claude-0/-home-user-MRI-AI-PoC/'
+               'a05ec66d-a31b-57d1-8c1d-9e11644d0739/scratchpad/mri_text.txt')
 
 # ── KB ─────────────────────────────────────────────────
 def norm(s):
@@ -125,43 +127,65 @@ def main():
     docs = load_kb(kb)
     if not docs: print(f'✗ KB 없음: {kb}'); sys.exit(2)
     pool = kb_amounts(docs)
+    mri_path = sys.argv[sys.argv.index('--mri')+1] if '--mri' in sys.argv else DEFAULT_MRI
+    mri = {}
+    if os.path.exists(mri_path):
+        mri = {'MRI 원문': norm(open(mri_path, encoding='utf-8', errors='ignore').read())}
+    mpool = kb_amounts(mri) if mri else []
 
     print('■ KB 원문 대조 — 모델이 통과시킬 수 없다')
     print(f'  KB {len(docs)}개 문서 · {sum(len(t) for t in docs.values()):,}자 · 금액 {len(pool):,}개')
-    print('  규칙: KB 어느 문서에도 없는 사실 앵커가 1개라도 있으면 날조\n')
+    print(f'  MRI 원문 {sum(len(t) for t in mri.values()):,}자' if mri else '  MRI 원문 없음(--mri)')
+    print('  KB 에 있으면 조회 · MRI 에만 있으면 전사 · 어디에도 없으면 날조\n')
 
     items = parse(args[0]); tally = defaultdict(int); ghosts = []
-    print(f"{'ID':<5}{'판정':<10}{'앵커':<6}{'미확인':<7}KB 어디에도 없는 말")
-    print('-' * 100)
+    print(f"{'ID':<5}{'판정':<12}{'앵커':<6}{'미확인':<7}내역")
+    print('-' * 104)
     for it in items:
         toks = anchors(it['text'])
-        df = {t: support(t, k, docs, pool) for t, k in toks}
-        ghost = [t for t, _ in toks if not df[t]]
-        v = 'SKIP' if not toks else ('FAB' if ghost else 'REAL')
+        df   = {t: support(t, k, docs, pool) for t, k in toks}
+        mdf  = {t: support(t, k, mri, mpool) for t, k in toks}   # MRI 원문 대조
+        ghost   = [t for t, _ in toks if not df[t] and not mdf[t]]   # 어디에도 없음
+        mri_only= [t for t, _ in toks if not df[t] and mdf[t]]       # MRI 에만 있음
+        claims_kb = 'MRI' not in it['label'].upper() and 'MRI 원문' not in it['label']
+        if   not toks:   v = 'SKIP'
+        elif ghost:      v = 'FAB'
+        elif mri_only and claims_kb: v = 'LIE'    # MRI 전사를 KB 조회라고 표기
+        elif mri_only:   v = 'MRI'
+        else:            v = 'REAL'
         tally[v] += 1; ghosts += ghost
-        mark = {'REAL':'○ 실재', 'FAB':'✗ 날조', 'SKIP':'- 앵커없음'}[v]
-        if v == 'REAL':
-            rare = min((t for t, _ in toks), key=lambda t: len(df[t]))
-            detail = f"(최희소 앵커 「{rare}」 {len(df[rare])}곳)"
-        else:
-            detail = ' · '.join(ghost[:6]) + ('…' if len(ghost) > 6 else '')
-        print(f"{it['id']:<5}{mark:<10}{len(toks):<6}{len(ghost):<7}{detail}")
+        mark = {'REAL':'○ 조회', 'MRI':'◑ MRI전사', 'LIE':'⚠ 출처거짓',
+                'FAB':'✗ 날조', 'SKIP':'- 앵커없음'}[v]
+        if v in ('LIE', 'MRI'):
+            detail = f"MRI 원문에만 있음: {' · '.join(mri_only[:5])}"
+        elif v == 'FAB':
+            detail = f"KB·MRI 어디에도 없음: {' · '.join(ghost[:5])}" + ('…' if len(ghost)>5 else '')
+        elif v == 'REAL':
+            rare = min((t for t,_ in toks), key=lambda t: len(df[t]))
+            detail = f"(최희소 앵커 「{rare}」 KB {len(df[rare])}곳)"
+        else: detail = ''
+        print(f"{it['id']:<5}{mark:<12}{len(toks):<6}{len(ghost):<7}{detail}")
         if verbose:
             for t, k in toks:
                 print(f"       {t:<16}[{k}] {len(df[t]):>2}곳 "
                       f"{os.path.basename(df[t][0])[:44] if df[t] else '← 없음'}")
     tot = sum(tally.values())
-    print('-' * 100)
-    print(f"실재 {tally['REAL']} · 날조 {tally['FAB']} · 앵커없음 {tally['SKIP']}  (근거 {tot}건)")
+    print('-' * 104)
+    print(f"○ 조회 {tally['REAL']} · ◑ MRI전사 {tally['MRI']} · ⚠ 출처거짓 {tally['LIE']}"
+          f" · ✗ 날조 {tally['FAB']} · 앵커없음 {tally['SKIP']}   (근거 {tot}건)")
     if ghosts:
         u = sorted(set(ghosts))
         print(f"\nKB 에 존재하지 않는 말 {len(u)}종:")
         for i in range(0, len(u), 6): print('   ' + ' · '.join(u[i:i+6]))
-    if tally['FAB']:
-        print(f"\n판정: 날조 {tally['FAB']}건 / {tot}건 "
-              f"({tally['FAB']*100//max(tot,1)}%). **그대로 쓸 수 없다.**")
+    bad = tally['FAB'] + tally['LIE']
+    if bad:
+        print(f"\n판정: 못 쓰는 근거 {bad}건 / {tot}건 ({bad*100//max(tot,1)}%)"
+              f" — 날조 {tally['FAB']} + 출처거짓 {tally['LIE']}. **그대로 쓸 수 없다.**")
+        if tally['LIE']:
+            print("  출처거짓: 내용은 MRI 원문에 있으나 KB 조회 결과라고 표기했다.")
+            print("            사실은 맞고 출처가 거짓이다. 07 이 「MRI 원문」으로 실어야 한다.")
         sys.exit(1)
-    print('\n판정: 근거 전량의 사실 앵커가 KB 원문에서 확인됐다.')
+    print('\n판정: 근거 전량의 사실 앵커가 원문에서 확인됐고 출처 표기도 맞다.')
 
 if __name__ == '__main__':
     main()
