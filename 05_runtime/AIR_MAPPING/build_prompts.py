@@ -60,6 +60,51 @@ NODES = {
 # 버린 것: 중복 섹션 20개, retrieval_proof, 예시 파일명,
 #          「직전 실행에서 …」 사후 설명 (오답의 본보기를 주는 꼴이었다)
 # ─────────────────────────────────────────────────────────────
+SEC4_RAW = """## 4. 도구가 돌려준 글을 그대로 담는다 — HARD RULE
+
+이 KB 도구는 문서 목록을 주지 않는다. 지금까지의 모든 호출이 이 모양이었다.
+
+    {{ "answer": "<검색 결과를 풀어 쓴 글>", "contents": [] }}
+
+**너는 검색기다.** 요약하지 않고, 고르지 않고, 사실을 뽑지 않는다.
+호출 한 번에 레코드 하나를 만들고, 도구가 돌려준 글을 통째로 담는다.
+
+    {{
+      "task_id": "<이번에 실행한 태스크 ID>",
+      "source": "{source}",
+      "query_sent": "<도구에 실제로 보낸 질의 문자열 그대로>",
+      "raw_answer": "<도구가 돌려준 `answer` 문자열 전체를 그대로>",
+      "source_footer": "<`- Source: …` 꼬리 줄을 그대로 복사. 꼬리가 없으면 \\"\\">",
+      "status": "SUCCESS|NO_RESULT|RETRIEVAL_ERROR"
+    }}
+
+`raw_answer` 규칙:
+
+- **한 글자도 고치지 않는다.** 요약 · 정돈 · 번역 · 맞춤법 교정 · 단위 변환 모두 안 된다.
+  도구가 쓴 표·번호·줄바꿈을 그대로 둔다.
+- 도구가 「그 자료는 없다」고 답했으면 **그 문장도 그대로 담고** `status` 를 `NO_RESULT` 로 둔다.
+  없다는 답도 도구 출력이다. 빈 칸으로 두지 않는다.
+- 길어도 가운데를 들어내지 않는다. 정말 길면 **앞에서부터** 담고 뒤를 버리되
+  `"raw_truncated": true` 를 같이 적는다.
+- **도구를 부르지 않았으면 이 칸을 채울 수 없다.** 빈 레코드를 만들지 않는다.
+  부르지 않고 이 칸을 채우면 그것이 곧 날조다.
+
+`source_footer` 는 옮겨 적는 칸이지 채우는 칸이 아니다. 파일명은 `answer` 글
+**끝에 꼬리로 붙을 때만** 온다. 붙지 않는 조회가 더 많다. **모르는 것이 정상이다.**
+꼬리가 없으면 `""` 로 두고, 07 이 그것을 「{source} 출처미상」으로 싣는다.
+**그럴듯한 출처명을 적는 것이 비워 두는 것보다 나쁘다.**
+
+### 네가 만들지 않는 칸
+
+`fact` · `finding` · `answer_excerpt` · `summary` · `key_point` · `extracted_value` —
+**사실을 뽑는 칸을 만들지 않는다.** 그 일은 07 이 한다.
+
+07 은 **네 `raw_answer` 안에 실제로 있는 문장만** 쓸 수 있다.
+그래서 네가 옮겨 적지 않은 문장은 이 워크플로 어디에서도 쓸 수 없다.
+반대로, 배정 태스크가 겨냥하지 않은 문장이라도 `raw_answer` 안에 있으면 07 이 쓴다.
+**무엇이 쓸모 있는지 네가 판단하지 않는다. 판단하지 않는 것이 네 일이다.**
+{note_block}"""
+
 SKELETON = """# {key} — 조회 노드
 
 너는 조회만 한다. 답을 쓰지 않는다. 보고서는 07·08·09·10 이 쓴다.
@@ -196,10 +241,16 @@ SKELETON = """# {key} — 조회 노드
 """
 
 
-def build(key):
+def build(key, raw=False):
+    """raw=True 면 D안 — 조회 노드가 사실을 뽑지 않고 도구 출력을 그대로 담는다."""
     n = NODES[key]
     note_block = ('\n' + n['note'] + '\n') if n['note'] else ''
-    return SKELETON.format(key=key, note_block=note_block, **n)
+    sk = SKELETON
+    if raw:
+        i = sk.index('## 4. 도구가 돌려주는 것')
+        j = sk.index('{note_block}') + len('{note_block}')
+        sk = sk[:i] + SEC4_RAW + sk[j:]
+    return sk.format(key=key, note_block=note_block, **n)
 
 
 def main():
