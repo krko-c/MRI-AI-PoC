@@ -32,7 +32,10 @@
 import argparse, json, os, re, sys
 from collections import OrderedDict
 
-PATH_RE = re.compile(r'"source_path"\s*:\s*"([^"]*)"')
+# 07 은 `source_paths` 를, 조회 노드는 `source_path` 를 쓴다. 둘 다 읽는다.
+# 복수형을 놓치는 바람에 13차 실행이 「인용 0건」으로 통과했다.
+PATH_RE  = re.compile(r'"source_path"\s*:\s*"([^"]*)"')
+PATHS_RE = re.compile(r'"source_paths"\s*:\s*\[([^\]]*)\]')
 SRC_RE  = re.compile(r'"source"\s*:\s*"(mri_[a-z0-9_]+)"')
 KBID_RE = re.compile(r'documents/upload/kb-([0-9a-f]+)/')
 
@@ -78,10 +81,14 @@ def load_manifest(kb_dir):
 def collect_citations(run_text):
     """인용된 (경로, 직전에 선언된 source) 쌍을 등장 순서대로 모은다."""
     out, seen = [], set()
-    for m in PATH_RE.finditer(run_text):
-        path = m.group(1)
-        before = run_text[:m.start()]
-        srcs = SRC_RE.findall(before)
+    hits = [(m.start(), m.group(1)) for m in PATH_RE.finditer(run_text)]
+    for m in PATHS_RE.finditer(run_text):
+        for raw in m.group(1).split(','):
+            raw = raw.strip().strip('"')
+            if raw:
+                hits.append((m.start(), raw))
+    for pos, path in sorted(hits):
+        srcs = SRC_RE.findall(run_text[:pos])
         claimed = srcs[-1] if srcs else None
         key = (path, claimed)
         if key not in seen:
@@ -238,11 +245,18 @@ def main():
         by_source_calls[by_kbid.get(kbid, f"kb-{kbid}(목록없음)")] = n
 
     print("■ 도구 호출 대조 — 로그는 플랫폼이 쓴다. 모델이 통과시킬 수 없다.")
-    if not calls and "Calling tool:" not in log_text:
-        print("    로그에 `Calling tool:` 줄이 없다. 도구 호출 줄이 포함된 전체 로그를")
-        print("    --run 또는 --log 로 주면 이 검사를 한다. 이번에는 건너뛴다.")
+    # 노드가 실행된 흔적(Thinking:/Done:/Routing)이 있는데 호출 줄이 0 이면
+    # 그것은 「로그를 안 준 것」이 아니라 **한 번도 부르지 않은 것**이다.
+    ran = bool(re.search(r'^\s*(Done:|Thinking:|Routing )', log_text, re.M))
+    if not calls and not ran:
+        print("    실행 흔적도 호출 줄도 없다. 전체 로그를 --run 또는 --log 로 주면")
+        print("    이 검사를 한다. 이번에는 건너뛴다.")
         lied = []
     else:
+        if not calls:
+            print("    ✗ 노드는 실행됐는데 `Calling tool:` 줄이 0 개다.")
+            print("      이 실행에서 지식베이스 도구는 한 번도 호출되지 않았다.")
+            print("      SUCCESS 를 낸 레코드는 전부 조회 결과가 아니다.")
         lied = []
         srcs = sorted(set(list(declared.keys()) + list(by_source_calls.keys())))
         print(f"    {'소스':22} {'실제 호출':>9} {'신고 태스크':>10} {'SUCCESS':>9}")
