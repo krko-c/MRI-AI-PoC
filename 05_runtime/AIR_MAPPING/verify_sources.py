@@ -258,13 +258,13 @@ def main():
     if not calls and not ran:
         print("    실행 흔적도 호출 줄도 없다. 전체 로그를 --run 또는 --log 로 주면")
         print("    이 검사를 한다. 이번에는 건너뛴다.")
-        lied, dropped = [], []
+        lied, dropped, overclaim = [], [], []
     else:
         if not calls:
             print("    ✗ 노드는 실행됐는데 `Calling tool:` 줄이 0 개다.")
             print("      이 실행에서 지식베이스 도구는 한 번도 호출되지 않았다.")
             print("      SUCCESS 를 낸 레코드는 전부 조회 결과가 아니다.")
-        lied, dropped = [], []
+        lied, dropped, overclaim = [], [], []
         srcs = sorted(set(list(declared.keys()) + list(by_source_calls.keys())))
         print(f"    {'소스':22} {'실제 호출':>9} {'신고 태스크':>10} {'SUCCESS':>9}")
         for src in srcs:
@@ -280,11 +280,20 @@ def main():
             elif n > 0 and d["tasks"] == 0:
                 mark = "  ✗ 부르고 담지 않음"
                 dropped.append((src, n))
+            # 계약은 「한 태스크당 호출 1회 + 넓은 조회 1회」다. 신고 태스크가 호출보다
+            # 많으면 그 차이만큼은 부르지 않고 낸 것이다. 17차의 실패(1호출/16태스크).
+            elif n > 0 and d["tasks"] > n:
+                mark = f"  ✗ 호출보다 태스크가 {d['tasks'] - n}개 많음"
+                overclaim.append((src, n, d["tasks"]))
             print(f"    {src:22} {n:>9} {d['tasks']:>10} {d['SUCCESS']:>9}{mark}")
         if lied:
             print()
             print("    ✗ 「호출 없이 SUCCESS」 — 도구를 한 번도 부르지 않고 SUCCESS 를 냈다.")
             print("      그 레코드의 내용은 조회 결과가 아니다. 상류 입력을 옮겨 적은 것이다.")
+        if overclaim:
+            print()
+            print("    ✗ 「호출보다 태스크가 많음」 — 한 태스크당 호출 1회 계약을 넘겼다.")
+            print("      차이만큼의 태스크는 부르지 않고 결과를 냈다. 상류 입력을 옮겨 적은 것이다.")
         if dropped:
             print()
             print("    ✗ 「부르고 담지 않음」 — 도구는 불렀는데 결과 태스크가 0 건이다.")
@@ -302,11 +311,13 @@ def main():
         fail.append(f"호출 없이 SUCCESS 를 낸 소스 {len(lied)}개")
     if dropped:
         fail.append(f"부르고 담지 않은 소스 {len(dropped)}개")
+    if overclaim:
+        fail.append(f"호출보다 태스크를 많이 낸 소스 {len(overclaim)}개")
 
     if fail:
         print("판정: " + " · ".join(fail) + ". 그대로 쓸 수 없다.")
         return 1
-    print("판정: 네 검사를 모두 통과했다.")
+    print("판정: 다섯 검사를 모두 통과했다.")
     return 0
 
 
