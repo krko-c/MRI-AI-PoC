@@ -44,6 +44,8 @@ EVID_RE  = re.compile(r'\[(E\d+)\][^\n`]*?·\s*`([^`\n]+)`')
 NAMES_RE = re.compile(r'"source_names"\s*:\s*\[([^\]]*)\]')
 # 플랫폼이 찍는 실제 도구 호출.  Calling tool: knowledge_base_search_kb_94eaa5b2
 CALL_RE  = re.compile(r'^\s*Calling tool:\s*knowledge_base_search_kb_([0-9a-f]+)', re.M)
+# 도구 이름 오류로 끝난 호출은 성립한 조회가 아니다. 호출 수에서 뺀다.
+ERR_RE   = re.compile(r'Error:\s*knowledge_base_search_kb_([0-9a-f]+) is not a valid tool')
 # 노드가 스스로 적은 실행 신고
 TASKID_RE = re.compile(r'"task_id"\s*:\s*"([^"]+)"')
 SRCF_RE   = re.compile(r'"source"\s*:\s*"(mri_[a-z0-9_]+)"')
@@ -239,6 +241,11 @@ def main():
     calls = {}
     for kbid in CALL_RE.findall(log_text):
         calls[kbid] = calls.get(kbid, 0) + 1
+    for kbid in ERR_RE.findall(log_text):
+        if kbid in calls:
+            calls[kbid] -= 1
+            if calls[kbid] <= 0:
+                del calls[kbid]
     declared = collect_declared(run_text)
     by_source_calls = {}
     for kbid, n in calls.items():
@@ -251,13 +258,13 @@ def main():
     if not calls and not ran:
         print("    실행 흔적도 호출 줄도 없다. 전체 로그를 --run 또는 --log 로 주면")
         print("    이 검사를 한다. 이번에는 건너뛴다.")
-        lied = []
+        lied, dropped = [], []
     else:
         if not calls:
             print("    ✗ 노드는 실행됐는데 `Calling tool:` 줄이 0 개다.")
             print("      이 실행에서 지식베이스 도구는 한 번도 호출되지 않았다.")
             print("      SUCCESS 를 낸 레코드는 전부 조회 결과가 아니다.")
-        lied = []
+        lied, dropped = [], []
         srcs = sorted(set(list(declared.keys()) + list(by_source_calls.keys())))
         print(f"    {'소스':22} {'실제 호출':>9} {'신고 태스크':>10} {'SUCCESS':>9}")
         for src in srcs:
@@ -267,11 +274,22 @@ def main():
             if d["SUCCESS"] > 0 and n == 0:
                 mark = "  ✗ 호출 없이 SUCCESS"
                 lied.append((src, d["SUCCESS"]))
+            # 부르고 담지 않은 경우 — 15차의 실패. 호출은 있는데 신고 태스크가 0 이면
+            # 그 조회 결과는 산출물에 도달하지 않았고, 다음 노드가 남의 자료원 이름으로
+            # 주워 담는다. 부르지 않은 것보다 나쁘다.
+            elif n > 0 and d["tasks"] == 0:
+                mark = "  ✗ 부르고 담지 않음"
+                dropped.append((src, n))
             print(f"    {src:22} {n:>9} {d['tasks']:>10} {d['SUCCESS']:>9}{mark}")
         if lied:
             print()
-            print("    ✗ 표시된 소스는 도구를 한 번도 부르지 않고 SUCCESS 를 냈다.")
+            print("    ✗ 「호출 없이 SUCCESS」 — 도구를 한 번도 부르지 않고 SUCCESS 를 냈다.")
             print("      그 레코드의 내용은 조회 결과가 아니다. 상류 입력을 옮겨 적은 것이다.")
+        if dropped:
+            print()
+            print("    ✗ 「부르고 담지 않음」 — 도구는 불렀는데 결과 태스크가 0 건이다.")
+            print("      조회 결과가 산출물에 도달하지 않았다. 그 답변은 사라지지 않고")
+            print("      다음 노드가 자기 자료원 이름을 달아 주워 담는다.")
     print()
 
     # ── 판정 ────────────────────────────────────────────────────────
@@ -282,11 +300,13 @@ def main():
         fail.append(f"파일명 비율 {ratio:.0f}%")
     if lied:
         fail.append(f"호출 없이 SUCCESS 를 낸 소스 {len(lied)}개")
+    if dropped:
+        fail.append(f"부르고 담지 않은 소스 {len(dropped)}개")
 
     if fail:
         print("판정: " + " · ".join(fail) + ". 그대로 쓸 수 없다.")
         return 1
-    print("판정: 세 검사를 모두 통과했다.")
+    print("판정: 네 검사를 모두 통과했다.")
     return 0
 
 
