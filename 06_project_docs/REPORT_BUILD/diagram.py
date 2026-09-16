@@ -124,25 +124,27 @@ agent1(os.path.join(d, 'fig_agent1.png'))
 agent2(os.path.join(d, 'fig_agent2.png'))
 
 # ─────────────────── 공통 전체 구성 (두 보고서 공용) ───────────────────
-def wholemap(path, active):      # active: 1 또는 2
+def wholemap(path, active):      # active: 1 · 2 · 0(둘 다)
     w, h = W, 150*S
     c = Canvas(w, h)
     f_b, f_s, f_t = F(13, True), F(11), F(10, True)
     pad = 14*S
-    items = [('MRI 리포트', None), ('① 이슈 스크리닝', 1), ('② 조사 · 대응안 작성', 2), ('대응안 초안', None)]
+    # 상자는 **하는 일**, 상자 아래 라벨은 **시스템 이름**.
+    items = [('MRI 리포트', None), ('이슈 전건 스크리닝', 1), ('선택 이슈 조사·대응안', 2), ('대응안 초안', None)]
+    names = {1: 'MRI 스크리닝 AI', 2: 'MRI 조사 대응안 AI'}
     gapx = 30*S
     bw = (w - pad*2 - gapx*3) // 4
     bh = 56*S
     y = 30*S
     for k, (name, idx) in enumerate(items):
         x = pad + k*(bw+gapx)
-        on = (idx == active)
+        on = (idx is not None) and (active == 0 or idx == active)
         fill = GREEN if on else (GRAY if idx is None else WHITE)
         c.d.rounded_rectangle([x, y, x+bw, y+bh], radius=8*S, fill=fill,
                               outline=(LINE if not on else (90,130,70)), width=(1 if not on else 3)*S)
         c.text(x+bw//2, y+bh//2, name, f_b if on or idx else f_s, anchor='mm')
         if on:
-            c.text(x+bw//2, y+bh+16*S, '이 문서', f_t, fill=(90,130,70), anchor='mm')
+            c.text(x+bw//2, y+bh+16*S, names[idx], f_t, fill=(90,130,70), anchor='mm')
         if k < 3:
             ax = x+bw+gapx//2
             c.d.line([x+bw+6*S, y+bh//2, ax+6*S, y+bh//2], fill=LINE, width=2*S)
@@ -151,5 +153,6 @@ def wholemap(path, active):      # active: 1 또는 2
     c.im.resize((w//S*2, h//S*2), Image.LANCZOS).save(path)
     print('생성', path)
 
+wholemap(os.path.join(d, 'fig_map0.png'), 0)
 wholemap(os.path.join(d, 'fig_map1.png'), 1)
 wholemap(os.path.join(d, 'fig_map2.png'), 2)
